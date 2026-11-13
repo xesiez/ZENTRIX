@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Windows.Data.Json;
 using Windows.Storage;
 using Windows.Storage.Streams;
+using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Certificates;
 using Windows.Web.Http;
 
 namespace ZENTRIX
@@ -14,18 +16,38 @@ namespace ZENTRIX
  /// </summary>
  public sealed class WindowsBridgeClient : IDisposable
  {
-  private readonly HttpClient _http = new HttpClient();
+  private HttpClient _http;
   private Uri _baseUri;
   public bool IsPaired { get; private set; }
 
-  public async Task PairAsync(string host, string oneTimeCode)
+  public async Task PairAsync(string host, string oneTimeCode, string expectedFingerprint)
   {
    if (String.IsNullOrWhiteSpace(host)) throw new ArgumentException("Enter the Windows host IP address.");
-   string address = host.Trim();
-   if (!address.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-    address = "https://" + address;
-   if (!address.Contains(":47831")) address = address.TrimEnd('/') + ":47831";
-   _baseUri = new Uri(address.TrimEnd('/') + "/");
+   if (String.IsNullOrWhiteSpace(expectedFingerprint)) throw new ArgumentException("Enter the SHA-256 certificate fingerprint shown by Windows Companion.");
+   string hostInput = host.Trim();
+   if (!hostInput.Contains("://")) hostInput = "https://" + hostInput;
+   Uri hostUri = new Uri(hostInput);
+   string hostName = hostUri.Host;
+   Uri bootstrapUri = new Uri("http://" + hostName + ":47830/bootstrap/certificate");
+
+   // Bootstrap only the public certificate over HTTP. Trust is established out-of-band
+   // by comparing its SHA-256 fingerprint with the value shown on the Windows host.
+   using (var bootstrap = new HttpClient())
+   {
+    var certificateResponse = await bootstrap.GetAsync(bootstrapUri);
+    certificateResponse.EnsureSuccessStatusCode();
+    IBuffer certificateBuffer = await certificateResponse.Content.ReadAsBufferAsync();
+    var sha256 = HashAlgorithmProvider.OpenAlgorithm(HashAlgorithmNames.Sha256);
+    string actualFingerprint = CryptographicBuffer.EncodeToHexString(sha256.HashData(certificateBuffer));
+    string expected = expectedFingerprint.Replace(":", "").Replace(" ", "").Trim().ToUpperInvariant();
+    if (!String.Equals(actualFingerprint, expected, StringComparison.OrdinalIgnoreCase))
+     throw new InvalidOperationException("Certificate fingerprint mismatch. No certificate was trusted.");
+    var certificate = new Certificate(certificateBuffer);
+    CertificateStores.TrustedRootCertificationAuthorities.Add(certificate);
+   }
+
+   _baseUri = new Uri("https://" + hostName + ":47831/");
+   _http = new HttpClient(); // created after app-container trust store update
    var body = new JsonObject();
    body.Add("code", JsonValue.CreateStringValue(oneTimeCode ?? String.Empty));
    var response = await _http.PostAsync(new Uri(_baseUri, "api/v1/pair"),
@@ -145,6 +167,6 @@ namespace ZENTRIX
    if (!IsPaired || _baseUri == null) throw new InvalidOperationException("Pair with the Windows Companion first.");
   }
 
-  public void Dispose() { _http.Dispose(); }
+  public void Dispose() { if (_http != null) _http.Dispose(); }
  }
 }
