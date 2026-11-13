@@ -36,7 +36,7 @@ internal sealed class CompanionForm : Form
     private readonly Button _stop = new() { Text = "Stop service", AutoSize = true, Enabled = false };
     private readonly RootStore _store = new();
     private WebApplication? _server;
-    private readonly string _pairCode = Convert.ToHexString(RandomNumberGenerator.GetBytes(4));
+    private string _pairCode = String.Empty;
     private string? _sessionToken;
     private bool _pairCodeUsed;
 
