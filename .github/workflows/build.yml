@@ -9,51 +9,97 @@ permissions:
   contents: read
 jobs:
   build:
-    name: Build and package UWP x64
+    name: Build complete Xbox x64 package
     runs-on: windows-2022
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Locate Visual Studio MSBuild
+      - name: Build, sign, collect dependencies, and create one distributable ZIP
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
+
           $vswhere = Join-Path $env:SystemDrive 'Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
           if (-not (Test-Path $vswhere)) { throw "vswhere.exe was not found at $vswhere" }
           $msbuild = & $vswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
           if (-not $msbuild) { throw "MSBuild was not found." }
-          "MSBUILD_PATH=$msbuild" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Create temporary package signing certificate
-        shell: pwsh
-        run: |
-          $password = ConvertTo-SecureString -String "$([guid]::NewGuid().ToString('N'))" -Force -AsPlainText
-          $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=ZENTRIX" -KeyUsage DigitalSignature -FriendlyName "ZENTRIX CI Package Signing" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          $plainPassword = [guid]::NewGuid().ToString('N')
+          Write-Output "::add-mask::$plainPassword"
+          $securePassword = ConvertTo-SecureString -String $plainPassword -Force -AsPlainText
+
+          $cert = New-SelfSignedCertificate -Type CodeSigningCert -Subject "CN=ZENTRIX" -FriendlyName "ZENTRIX CI Package Signing" -KeyUsage DigitalSignature -CertStoreLocation "Cert:\CurrentUser\My"
           $pfxPath = Join-Path $env:RUNNER_TEMP "ZENTRIX-CI.pfx"
           $cerPath = Join-Path $env:GITHUB_WORKSPACE "ZENTRIX-CI.cer"
-          Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $password | Out-Null
+          Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $securePassword | Out-Null
           Export-Certificate -Cert $cert -FilePath $cerPath | Out-Null
-          "PACKAGE_CERTIFICATE=$pfxPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          "PACKAGE_CERTIFICATE_PASSWORD=$([System.Net.NetworkCredential]::new('', $password).Password)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Restore and create signed Release x64 package
-        shell: pwsh
-        run: |
-          $packageDir = Join-Path $env:GITHUB_WORKSPACE "AppPackages\"
+          $packageDir = Join-Path $env:GITHUB_WORKSPACE "AppPackages"
           New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
-          & $env:MSBUILD_PATH .\ZENTRIX.sln /restore /m /t:Build /p:Configuration=Release /p:Platform=x64 /p:AppxPackage=true /p:GenerateAppxPackageOnBuild=true /p:AppxBundle=Always /p:AppxBundlePlatforms=x64 /p:UapAppxPackageBuildMode=SideloadOnly /p:AppxPackageDir="$packageDir" /p:AppxPackageSigningEnabled=true /p:PackageCertificateKeyFile="$env:PACKAGE_CERTIFICATE" /p:PackageCertificatePassword="$env:PACKAGE_CERTIFICATE_PASSWORD" /verbosity:minimal
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $bundle = Get-ChildItem -Path $packageDir -Recurse -File -Include *.msixbundle,*.appxbundle
-          if (-not $bundle) { throw "Packaging completed without producing an MSIX/AppX bundle." }
-          Copy-Item $bundle[0].FullName -Destination (Join-Path $packageDir "ZENTRIX-x64.msixbundle") -Force
-          if (-not (Test-Path (Join-Path $env:GITHUB_WORKSPACE "ZENTRIX-CI.cer"))) { throw "Signing certificate was not exported." }
+          & $msbuild .\ZENTRIX.sln /restore /m /t:Build /p:Configuration=Release /p:Platform=x64 /p:AppxPackage=true /p:GenerateAppxPackageOnBuild=true /p:AppxBundle=Never /p:UapAppxPackageBuildMode=SideloadOnly "/p:AppxPackageDir=$packageDir\" /p:AppxPackageSigningEnabled=true "/p:PackageCertificateKeyFile=$pfxPath" "/p:PackageCertificatePassword=$plainPassword" /verbosity:minimal
+          if ($LASTEXITCODE -ne 0) { throw "UWP Release packaging failed with exit code $LASTEXITCODE." }
 
-      - name: Upload Xbox sideload package and certificate
+          $mainPackage = Get-ChildItem -Path $packageDir -Recurse -File -Filter *.appx |
+            Where-Object { $_.FullName -notmatch '[\\/]Dependencies[\\/]' } |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $mainPackage) { throw "No main x64 APPX package was produced." }
+          if (-not (Test-Path $cerPath)) { throw "Signing certificate was not exported." }
+
+          $distDir = Join-Path $env:GITHUB_WORKSPACE "dist"
+          $stageDir = Join-Path $env:RUNNER_TEMP "ZENTRIX-Xbox-x64-Complete"
+          if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
+          Copy-Item $mainPackage.FullName (Join-Path $stageDir "ZENTRIX-x64.appx") -Force
+          Copy-Item $cerPath (Join-Path $stageDir "ZENTRIX-CI.cer") -Force
+
+          $dependencyPackages = Get-ChildItem -Path $packageDir -Recurse -File -Filter *.appx |
+            Where-Object { $_.FullName -match '[\\/]Dependencies[\\/]x64[\\/]' }
+          if ($dependencyPackages) {
+            $dependencyStage = Join-Path $stageDir "Dependencies\x64"
+            New-Item -ItemType Directory -Force -Path $dependencyStage | Out-Null
+            foreach ($dependency in $dependencyPackages) {
+              Copy-Item $dependency.FullName (Join-Path $dependencyStage $dependency.Name) -Force
+            }
+          }
+
+          $readme = @'
+          ZENTRIX - Xbox Series X/S UWP sideload package
+
+          Contents:
+          - ZENTRIX-x64.appx: signed application package
+          - Dependencies/x64: framework packages emitted by the UWP packaging toolchain, when required
+          - ZENTRIX-CI.cer: certificate corresponding to the package signature
+
+          Installation:
+          1. Extract this ZIP.
+          2. Open Xbox Device Portal while the console is in Developer Mode.
+          3. Deploy ZENTRIX-x64.appx and select the certificate and any framework packages in Dependencies/x64 when prompted.
+          4. If the portal reports a missing framework package, install the matching x64 framework package from this bundle.
+
+          IMPORTANT:
+          This CI certificate is temporary and is not a trusted Store certificate. Import/trust it on the development console as required by Xbox Device Portal before deployment. A new CI run may create a new certificate.
+          The package contains only dependencies actually emitted by the current build output; it does not bundle Windows system components.
+          '@
+          Set-Content -Path (Join-Path $stageDir "README-INSTALL.txt") -Value $readme -Encoding UTF8
+
+          New-Item -ItemType Directory -Force -Path $distDir | Out-Null
+          $zipPath = Join-Path $distDir "ZENTRIX-Xbox-x64-Complete.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+          Compress-Archive -Path (Join-Path $stageDir '*') -DestinationPath $zipPath -CompressionLevel Optimal
+          if (-not (Test-Path $zipPath)) { throw "Complete distribution ZIP was not created." }
+
+          Write-Host "Main package: $($mainPackage.FullName)"
+          Write-Host "Framework dependency packages collected: $($dependencyPackages.Count)"
+          Write-Host "Complete package: $zipPath"
+          Write-Host "Complete ZIP size (MB): $([math]::Round((Get-Item $zipPath).Length / 1MB, 2))"
+
+      - name: Upload complete Xbox package
         uses: actions/upload-artifact@v4
         with:
-          name: ZENTRIX-Xbox-x64-Sideload
-          path: |
-            AppPackages/ZENTRIX-x64.msixbundle
-            ZENTRIX-CI.cer
+          name: ZENTRIX-Xbox-x64-Complete
+          path: dist/ZENTRIX-Xbox-x64-Complete.zip
           if-no-files-found: error
+          compression-level: 0
           retention-days: 14
