@@ -15,12 +15,11 @@
 1. Extract and run `ZENTRIX.Companion.exe` on Windows 10/11 x64.
 2. Approve only the USB folders you want to share.
 3. Click **Start secure service** and allow the app through Windows Defender Firewall only on the **Private** network profile. Do not create a Public-profile or router port-forwarding rule.
-4. On Xbox Edge, open `http://<Windows-IP>:47830/bootstrap/certificate` and download the public certificate.
-5. Before trusting it, compare the certificate's SHA-256 fingerprint with the fingerprint shown in the Windows Companion window. Install it into the Xbox current-user **Trusted Root Certification Authorities** store using the certificate UI.
-6. In ZENTRIX, choose **Windows PC**, enter the Windows IP and the one-use pairing code.
-7. The actual UWP HTTPS connection must succeed with normal platform certificate validation. ZENTRIX does not ignore certificate errors.
+4. In ZENTRIX on Xbox, choose **Windows PC** and enter the Windows IP, the one-use pairing code, and the SHA-256 fingerprint shown in the Windows Companion window.
+5. ZENTRIX downloads only the public certificate from the HTTP bootstrap endpoint, compares its SHA-256 fingerprint with the value you entered, and adds it to the app-specific Trusted Root store. If the fingerprint differs, pairing stops and no certificate is trusted.
+6. ZENTRIX then pairs over HTTPS on port 47831 using normal platform certificate validation. It does not ignore certificate errors or install a trust-all callback.
 
-Port 47830 is an HTTP bootstrap listener for the public certificate only. Middleware returns 404 for every other HTTP path. All API endpoints are available only over HTTPS on port 47831.
+Port 47830 is an HTTP bootstrap listener for the public certificate only. Middleware returns 404 for every other HTTP path. The Xbox app verifies the downloaded certificate against the out-of-band SHA-256 fingerprint before adding it to its own trusted-root store. All API endpoints are available only over HTTPS on port 47831.
 
 ## Important security notes
 
