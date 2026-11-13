@@ -336,6 +336,12 @@ namespace ZENTRIX
      MenuFlyoutItem rename = new MenuFlyoutItem { Text = "Rename selected" };
      rename.Click += async (s, e) => await RenameSelectedRemoteAsync(selected);
      flyout.Items.Add(rename);
+     MenuFlyoutItem copy = new MenuFlyoutItem { Text = "Copy selected to..." };
+     copy.Click += async (s, e) => await TransferSelectedRemoteAsync(selected, false);
+     flyout.Items.Add(copy);
+     MenuFlyoutItem move = new MenuFlyoutItem { Text = "Move selected to..." };
+     move.Click += async (s, e) => await TransferSelectedRemoteAsync(selected, true);
+     flyout.Items.Add(move);
      MenuFlyoutItem delete = new MenuFlyoutItem { Text = "Delete selected" };
      delete.Click += async (s, e) => await DeleteSelectedRemoteAsync(selected);
      flyout.Items.Add(delete);
@@ -375,6 +381,28 @@ namespace ZENTRIX
     await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
    }
    catch (Exception ex) { StatusText.Text = "Rename failed: " + ex.Message; }
+  }
+
+  private async Task TransferSelectedRemoteAsync(FileEntry entry, bool move)
+  {
+   try
+   {
+    IReadOnlyList<RemoteEntry> roots = await _bridgeClient.GetRootsAsync();
+    ComboBox rootPicker = new ComboBox { ItemsSource = roots, DisplayMemberPath = "Name", MinWidth = 360, SelectedIndex = roots.Count > 0 ? 0 : -1 };
+    TextBox destinationPath = new TextBox { PlaceholderText = "Destination folder path (blank = root)", MinWidth = 360 };
+    StackPanel panel = new StackPanel();
+    panel.Children.Add(new TextBlock { Text = "Choose an approved destination folder:" });
+    panel.Children.Add(rootPicker);
+    panel.Children.Add(destinationPath);
+    ContentDialog dialog = new ContentDialog { Title = move ? "Move selected item" : "Copy selected item", Content = panel, PrimaryButtonText = move ? "Move" : "Copy", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+    if (roots.Count == 0 || await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+    RemoteEntry root = rootPicker.SelectedItem as RemoteEntry;
+    if (root == null) return;
+    string target = String.IsNullOrWhiteSpace(destinationPath.Text) ? entry.Name : destinationPath.Text.TrimEnd('/') + "/" + entry.Name;
+    await _bridgeClient.TransferAsync(entry.RemoteRootId, entry.RemotePath, root.RootId, target, move);
+    await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
+   }
+   catch (Exception ex) { StatusText.Text = (move ? "Move" : "Copy") + " failed: " + ex.Message; }
   }
 
   private async Task DeleteSelectedRemoteAsync(FileEntry entry)
