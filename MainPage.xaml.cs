@@ -437,7 +437,7 @@ namespace ZENTRIX
 
   private async Task DeleteSelectedRemoteAsync(FileEntry entry)
   {
-   ContentDialog confirm = new ContentDialog { Title = "Delete permanently?", Content = "Delete " + entry.Name + " from the Windows shared folder?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Close };
+   ContentDialog confirm = new ContentDialog { Title = "Delete permanently?", Content = "Delete " + entry.Name + " from the Windows shared folder?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.None };
    if (await confirm.ShowAsync() != ContentDialogResult.Primary) return;
    try
    {
