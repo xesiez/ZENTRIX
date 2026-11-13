@@ -25,5 +25,5 @@ A dedicated Xbox Series X file manager with an optional Windows Companion for ap
 
 ## Current limitations
 - The Companion is a development build. Its HTTPS certificate trust flow must be validated on the actual Xbox.
-- Remote browsing/download UI is implemented; full Xbox-side mutation UI and real USB/network lifecycle testing remain acceptance work.
+- Remote browsing, streamed download/upload, and Xbox-side create/rename/copy/move/delete actions are implemented in source; end-to-end device verification remains acceptance work.
 - Do not treat successful CI compilation as proof of Xbox runtime compatibility.
