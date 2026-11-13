@@ -50,7 +50,8 @@ internal sealed class CompanionForm : Form
         toolbar.Controls.AddRange([_add, _addDrive, _remove, _start, _stop]);
         var note = new Label { Dock = DockStyle.Bottom, Height = 74, Padding = new Padding(12), Text = "Only folders explicitly approved here are exposed. Keep Windows on a private network. HTTPS uses a local development certificate; the Xbox must independently trust the issuing certificate before pairing can be considered secure." };
         Controls.Add(_roots); Controls.Add(note); Controls.Add(_status); Controls.Add(toolbar); Controls.Add(heading);
-        _add.Click += (_, _) => AddRoot();\n        _addDrive.Click += (_, _) => AddRemovableDrive();
+        _add.Click += (_, _) => AddRoot();
+        _addDrive.Click += (_, _) => AddRemovableDrive();
         _remove.Click += (_, _) => RemoveRoot();
         _start.Click += async (_, _) => await StartServerAsync();
         _stop.Click += async (_, _) => await StopServerAsync();
