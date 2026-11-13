@@ -8,7 +8,7 @@
 - Supports one-use pairing codes (5-minute expiry), bearer-token authentication, paginated-ready directory listing, streamed downloads/uploads, directory creation, copy, move, rename, and delete endpoints.
 - Streams file bodies with bounded 128 KiB buffers; it does not read an entire file into memory.
 - Stores approved-root configuration under the current user's LocalAppData.
-- Uses a development certificate generated on first launch. The PFX remains in LocalAppData; only the public CER is exposed.
+- Uses a development certificate generated on first launch. The PFX is protected with Windows DPAPI for the current user in LocalAppData; only the public CER is exposed.
 
 ## First-run setup
 
