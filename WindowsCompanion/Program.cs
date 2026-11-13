@@ -410,8 +410,9 @@ internal static class CertificateFactory
         req.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, true));
         req.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.1") }, true));
         using var cert = req.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(2));
-        byte[] privatePfx = cert.Export(X509ContentType.Pfx);\n        File.WriteAllBytes(PfxPath, ProtectedData.Protect(privatePfx, null, DataProtectionScope.CurrentUser));
+        byte[] privatePfx = cert.Export(X509ContentType.Pfx);
+        File.WriteAllBytes(PfxPath, ProtectedData.Protect(privatePfx, null, DataProtectionScope.CurrentUser));
         File.WriteAllBytes(CertificatePath, cert.Export(X509ContentType.Cert));
-        return new X509Certificate2(PfxPath, (string?)null, X509KeyStorageFlags.Exportable);
+        return new X509Certificate2(pfx, (string?)null, X509KeyStorageFlags.Exportable);
     }
 }
