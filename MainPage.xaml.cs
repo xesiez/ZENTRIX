@@ -94,10 +94,10 @@ namespace ZENTRIX
      _items.Add(new FileEntry { Name = device.DisplayName, Details = "Removable device", IconGlyph = "\uE8B7", Folder = device });
     StatusText.Text = _items.Count == 0 ? "No removable storage detected. App storage is still available." : _items.Count + " removable device(s) found.";
    }
-   catch (UnauthorizedAccessException ex) { ReportStorageError(ex); }
-   catch (IOException ex) { ReportStorageError(ex); }
-   catch (COMException ex) { ReportStorageError(ex); }
-   catch (Exception ex) { ReportStorageError(ex); }
+   catch (UnauthorizedAccessException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (IOException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (COMException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (Exception ex) { ReportStorageError(ex, pageVersion, requestVersion); }
   }
 
   private async Task LoadFolderAsync(StorageFolder folder, bool pushHistory)
@@ -123,10 +123,10 @@ namespace ZENTRIX
      _items.Add(new FileEntry { Name = file.Name, Details = String.IsNullOrEmpty(file.FileType) ? "File" : file.FileType.ToUpperInvariant(), IconGlyph = "\uE8A5", File = file });
     StatusText.Text = _items.Count == 0 ? "This folder is empty." : _items.Count + " item(s)";
    }
-   catch (UnauthorizedAccessException ex) { ReportStorageError(ex); }
-   catch (IOException ex) { ReportStorageError(ex); }
-   catch (COMException ex) { ReportStorageError(ex); }
-   catch (Exception ex) { ReportStorageError(ex); }
+   catch (UnauthorizedAccessException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (IOException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (COMException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
+   catch (Exception ex) { ReportStorageError(ex, pageVersion, requestVersion); }
   }
 
   private bool IsCurrentRequest(int pageVersion, int requestVersion)
@@ -138,6 +138,13 @@ namespace ZENTRIX
   {
    Debug.WriteLine("ZENTRIX storage operation failed: " + exception);
    if (_isPageActive) StatusText.Text = "Storage could not be read. App-local storage remains available.";
+  }
+
+  private void ReportStorageError(Exception exception, int pageVersion, int requestVersion)
+  {
+   Debug.WriteLine("ZENTRIX storage operation failed: " + exception);
+   if (IsCurrentRequest(pageVersion, requestVersion))
+    StatusText.Text = "Storage could not be read. App-local storage remains available.";
   }
 
   private void ShowFilesWorkspace(string title, string subtitle)
