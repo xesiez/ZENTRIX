@@ -105,6 +105,20 @@ namespace ZENTRIX
    response.EnsureSuccessStatusCode();
   }
 
+  public async Task TransferAsync(string sourceRootId, string sourcePath, string destinationRootId, string destinationPath, bool move)
+  {
+   EnsurePaired();
+   var body = new JsonObject();
+   body.Add("sourceRootId", JsonValue.CreateStringValue(sourceRootId));
+   body.Add("sourcePath", JsonValue.CreateStringValue(sourcePath));
+   body.Add("destinationRootId", JsonValue.CreateStringValue(destinationRootId));
+   body.Add("destinationPath", JsonValue.CreateStringValue(destinationPath ?? String.Empty));
+   string endpoint = move ? "api/v1/operations/move" : "api/v1/operations/copy";
+   var response = await _http.PostAsync(new Uri(_baseUri, endpoint),
+    new HttpStringContent(body.Stringify(), UnicodeEncoding.Utf8, "application/json"));
+   response.EnsureSuccessStatusCode();
+  }
+
   public async Task DeleteAsync(string rootId, string relativePath)
   {
    EnsurePaired();
