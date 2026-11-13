@@ -16,6 +16,22 @@ namespace ZENTRIX
    if (rootFrame.Content == null) rootFrame.Navigate(typeof(MainPage), e.Arguments);
    Window.Current.Activate();
   }
+  protected override void OnFileActivated(FileActivatedEventArgs e)
+  {
+   Frame rootFrame = Window.Current.Content as Frame;
+   if (rootFrame == null)
+   {
+    rootFrame = new Frame();
+    rootFrame.NavigationFailed += OnNavigationFailed;
+    Window.Current.Content = rootFrame;
+   }
+   if (e.Files != null && e.Files.Count > 0)
+    rootFrame.Navigate(typeof(MainPage), e.Files[0]);
+   else
+    rootFrame.Navigate(typeof(MainPage));
+   Window.Current.Activate();
+  }
+
   private void OnNavigationFailed(object sender, NavigationFailedEventArgs e) { throw new InvalidOperationException("Failed to load page: " + e.SourcePageType.FullName); }
   private void OnResuming(object sender, object e)
   {
