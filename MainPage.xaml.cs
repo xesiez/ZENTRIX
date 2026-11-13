@@ -41,7 +41,7 @@ namespace ZENTRIX
    StorageFile activatedFile = e.Parameter as StorageFile;
    if (activatedFile != null)
     await LoadActivatedFileLocationAsync(activatedFile);
-   else if (_currentFolder == null && !_isShowingRemovableRoot)
+   else if (_currentFolder == null && !_isShowingRemovableRoot && !_isRemoteLocation)
     await LoadAppStorageAsync();
    else
     await ReloadCurrentLocationAsync();
