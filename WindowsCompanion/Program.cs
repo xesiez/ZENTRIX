@@ -311,7 +311,7 @@ internal sealed class RootStore
     {
         resolved = "";
         var root = GetPath(id);
-        if (root is null || (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0) || Path.IsPathRooted(relative) || relative.Contains('\') || relative.Split('/').Any(s => s == ".." || s == ".")) return false;
+        if (root is null || (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0) || Path.IsPathRooted(relative) || relative.Contains((char)92) || relative.Split('/').Any(s => s == ".." || s == ".")) return false;
         var candidate = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
         var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
         if (!candidate.Equals(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase) &&
