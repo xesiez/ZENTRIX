@@ -347,7 +347,37 @@ namespace ZENTRIX
      flyout.Items.Add(delete);
     }
    }
+   else if (!_isRemoteLocation && _bridgeClient != null && _bridgeClient.IsPaired)
+   {
+    FileEntry localSelected = FilesListView.SelectedItem as FileEntry;
+    if (localSelected != null && localSelected.File != null)
+    {
+     MenuFlyoutItem upload = new MenuFlyoutItem { Text = "Upload selected to Windows PC..." };
+     upload.Click += async (s, e) => await UploadSelectedToWindowsAsync(localSelected.File);
+     flyout.Items.Add(upload);
+    }
+   }
    flyout.ShowAt(target ?? OptionsButton);
+  }
+
+  private async Task UploadSelectedToWindowsAsync(StorageFile file)
+  {
+   try
+   {
+    IReadOnlyList<RemoteEntry> roots = await _bridgeClient.GetRootsAsync();
+    ComboBox rootPicker = new ComboBox { ItemsSource = roots, DisplayMemberPath = "Name", MinWidth = 360, SelectedIndex = roots.Count > 0 ? 0 : -1 };
+    TextBox destinationPath = new TextBox { Text = file.Name, PlaceholderText = "Destination path", MinWidth = 360 };
+    StackPanel panel = new StackPanel();
+    panel.Children.Add(new TextBlock { Text = "Choose an approved destination and filename:" });
+    panel.Children.Add(rootPicker); panel.Children.Add(destinationPath);
+    ContentDialog dialog = new ContentDialog { Title = "Upload to Windows PC", Content = panel, PrimaryButtonText = "Upload", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+    if (roots.Count == 0 || await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+    RemoteEntry root = rootPicker.SelectedItem as RemoteEntry;
+    if (root == null || String.IsNullOrWhiteSpace(destinationPath.Text)) return;
+    await _bridgeClient.UploadAsync(root.RootId, destinationPath.Text.TrimStart('/'), file);
+    StatusText.Text = "Upload completed: " + file.Name;
+   }
+   catch (Exception ex) { StatusText.Text = "Upload failed: " + ex.Message; }
   }
 
   private async Task<string> PromptForTextAsync(string title, string placeholder)
