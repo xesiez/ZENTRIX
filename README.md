@@ -1,22 +1,22 @@
 # ZENTRIX
 
-Native UWP application foundation for Xbox Series X, focused on file management, storage, media and secure device connectivity.
+A dedicated Xbox Series X file manager. ZENTRIX is focused exclusively on browsing and managing files and folders.
+
+## Product scope
+- Single-purpose file manager interface; no Home dashboard, music player, phone-link, media library or device synchronization sections.
+- Controller-first navigation for Xbox.
+- Browse app-local storage and accessible removable storage.
+- Open files and navigate folders.
+- File operations will be delivered in focused stages: create folders, copy, move, rename, delete, multi-select, search, sort and file details, subject to UWP/Xbox storage API and capability restrictions.
+- Storage errors are isolated so removable-device failures do not take down app-local browsing.
+- Async lifecycle guards prevent stale requests from updating the active view.
 
 ## Engineering baseline
 - Native UWP, XAML and C# 7.3; x64 target.
-- Files-first startup with Files, Home, Music and Phone Link navigation.
-- Shared semantic design resources under Styles/.
-- Controller-first navigation with visible focus feedback and a persistent controller hint bar.
-- App-local and removable-storage browsing with isolated storage failures.
-- Page/request lifecycle guards to prevent stale asynchronous UI updates.
-- GitHub Actions build workflow for main and prep/storage-file-architecture.
+- Semantic design resources under Styles/.
+- GitHub Actions Windows x64 Release build on main and prep/storage-file-architecture.
 
 ## Build
-Open ZENTRIX.sln in Visual Studio 2022 with the Universal Windows Platform development workload and Windows 10 SDK 10.0.19041.0 (or a compatible newer SDK). Select x64 and build the ZENTRIX project.
+Open ZENTRIX.sln in Visual Studio 2022 with the Universal Windows Platform development workload and Windows 10 SDK 10.0.19041.0 (or compatible newer SDK). Select x64 and build the ZENTRIX project.
 
-The GitHub Actions workflow performs a Windows x64 Release build. Package signing and Store submission are not configured in this initial baseline.
-
-## Storage permissions
-The application declares the removableStorage device capability to enumerate removable devices. Store distribution may require capability approval. App-local storage remains independent of removable-device availability.
-
-No 1080p- or 4K-specific display requirements are imposed by this project baseline.
+Package signing and Store submission are not configured in this baseline.
