@@ -87,7 +87,7 @@ internal sealed class CompanionForm : Form
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
+                options.ListenAnyIP(47830); // Public certificate bootstrap only; all other HTTP paths are blocked below.\n                options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
             });
             builder.Services.AddSingleton(_store);
             builder.Services.AddSingleton(new AuthState(_pairCode));
@@ -101,7 +101,7 @@ internal sealed class CompanionForm : Form
                 { ctx.Response.StatusCode = 401; await ctx.Response.WriteAsJsonAsync(new { error = "unauthorized" }); return; }
                 await next();
             });
-            app.MapGet("/api/v1/health", () => Results.Ok(new { service = "ZENTRIX Companion", status = "ok", protocol = "https", version = 1 }));
+            app.MapGet("/bootstrap/certificate", () => Results.File(File.ReadAllBytes(CertificateFactory.CertificatePath), "application/x-x509-ca-cert", "zentrix-companion.cer"));\n            app.MapGet("/api/v1/health", () => Results.Ok(new { service = "ZENTRIX Companion", status = "ok", protocol = "https", version = 1 }));
             app.MapPost("/api/v1/pair", (PairRequest request, AuthState auth) =>
             {
                 var token = auth.TryPair(request.Code);
