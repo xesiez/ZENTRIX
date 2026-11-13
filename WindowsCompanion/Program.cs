@@ -239,7 +239,9 @@ internal sealed class AuthState(string pairingCode)
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(_token), Encoding.UTF8.GetBytes(header[7..]));
 }
 
-internal static class CompanionOperations\n{\npublic static IResult Transfer(TransferRequest request, RootStore roots, bool move)
+internal static class CompanionOperations
+{
+public static IResult Transfer(TransferRequest request, RootStore roots, bool move)
 {
     if (!roots.TryResolve(request.SourceRootId, request.SourcePath, out var source) ||
         !roots.TryResolve(request.DestinationRootId, request.DestinationPath, out var destination))
@@ -271,7 +273,11 @@ internal static void CopyDirectory(string source, string destination)
     foreach (var directory in Directory.EnumerateDirectories(source))
         CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
 }
-internal sealed record PairRequest(string Code);\ninternal sealed record PathRequest(string RootId, string Path);\ninternal sealed record RenameRequest(string RootId, string Path, string NewName);\ninternal sealed record TransferRequest(string SourceRootId, string SourcePath, string DestinationRootId, string DestinationPath);
+}
+internal sealed record PairRequest(string Code);
+internal sealed record PathRequest(string RootId, string Path);
+internal sealed record RenameRequest(string RootId, string Path, string NewName);
+internal sealed record TransferRequest(string SourceRootId, string SourcePath, string DestinationRootId, string DestinationPath);
 internal sealed record EntryDto(string Name, string Type, long? Size, string Path);
 internal sealed record ApprovedRoot(string Id, string Name, string Path)
 {
