@@ -17,6 +17,7 @@ namespace ZENTRIX
  public sealed partial class MainPage : Page
  {
   private readonly ObservableCollection<FileEntry> _items = new ObservableCollection<FileEntry>();
+  private readonly ExplorerStorageService _storageService = new ExplorerStorageService();
   private readonly Stack<ExplorerLocation> _history = new Stack<ExplorerLocation>();
   private StorageFolder _currentFolder;
   private bool _isShowingRemovableRoot;
@@ -74,7 +75,7 @@ namespace ZENTRIX
    if (!_isPageActive) return;
    _history.Clear();
    _isShowingRemovableRoot = false;
-   await LoadFolderAsync(ApplicationData.Current.LocalFolder, false);
+   await LoadFolderAsync(_storageService.GetAppLocalRoot(), false);
   }
 
   private async Task LoadRemovableStorageAsync(bool preserveHistory)
@@ -90,9 +91,14 @@ namespace ZENTRIX
    StatusText.Text = "Checking removable devices...";
    try
    {
-    IReadOnlyList<StorageFolder> devices = await KnownFolders.RemovableDevices.GetFoldersAsync();
+    StorageEnumerationResult<StorageFolder> result = await _storageService.GetRemovableDevicesAsync();
     if (!IsCurrentRequest(pageVersion, requestVersion)) return;
-    foreach (StorageFolder device in devices)
+    if (!result.Succeeded)
+    {
+     ReportStorageError(result.Error, pageVersion, requestVersion);
+     return;
+    }
+    foreach (StorageFolder device in result.Items)
      _items.Add(new FileEntry { Name = device.DisplayName, Details = "Removable device", IconGlyph = "\uE8B7", Folder = device });
     StatusText.Text = _items.Count == 0 ? "No removable storage detected. App storage is still available." : _items.Count + " removable device(s) found.";
    }
@@ -115,15 +121,30 @@ namespace ZENTRIX
    StatusText.Text = "Loading folder...";
    try
    {
-    IReadOnlyList<StorageFolder> folders = await folder.GetFoldersAsync();
+    // Enumerate folders and files independently so a partial storage failure
+    // does not hide the entries that remain accessible.
+    StorageEnumerationResult<StorageFolder> folders = await _storageService.EnumerateFoldersAsync(folder);
     if (!IsCurrentRequest(pageVersion, requestVersion)) return;
-    foreach (StorageFolder child in folders)
-     _items.Add(new FileEntry { Name = child.Name, Details = "Folder", IconGlyph = "\uE8B7", Folder = child });
-    IReadOnlyList<StorageFile> files = await folder.GetFilesAsync();
+    if (folders.Succeeded)
+    {
+     foreach (StorageFolder child in folders.Items)
+      _items.Add(new FileEntry { Name = child.Name, Details = "Folder", IconGlyph = "\uE8B7", Folder = child });
+    }
+
+    StorageEnumerationResult<StorageFile> files = await _storageService.EnumerateFilesAsync(folder);
     if (!IsCurrentRequest(pageVersion, requestVersion)) return;
-    foreach (StorageFile file in files)
-     _items.Add(new FileEntry { Name = file.Name, Details = String.IsNullOrEmpty(file.FileType) ? "File" : file.FileType.ToUpperInvariant(), IconGlyph = "\uE8A5", File = file });
-    StatusText.Text = _items.Count == 0 ? "This folder is empty." : _items.Count + " item(s)";
+    if (files.Succeeded)
+    {
+     foreach (StorageFile file in files.Items)
+      _items.Add(new FileEntry { Name = file.Name, Details = String.IsNullOrEmpty(file.FileType) ? "File" : file.FileType.ToUpperInvariant(), IconGlyph = "\uE8A5", File = file });
+    }
+
+    if (!folders.Succeeded && !files.Succeeded)
+     StatusText.Text = "This location could not be read. App-local storage remains available.";
+    else if (!folders.Succeeded || !files.Succeeded)
+     StatusText.Text = _items.Count + " item(s). Some entries could not be read.";
+    else
+     StatusText.Text = _items.Count == 0 ? "This folder is empty." : _items.Count + " item(s)";
    }
    catch (UnauthorizedAccessException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
    catch (IOException ex) { ReportStorageError(ex, pageVersion, requestVersion); }
