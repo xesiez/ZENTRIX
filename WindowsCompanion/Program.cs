@@ -167,12 +167,13 @@ internal sealed class AuthState(string pairingCode)
 {
     private readonly object _gate = new();
     private bool _used;
+    private readonly DateTimeOffset _expires = DateTimeOffset.UtcNow.AddMinutes(5);
     private readonly string _token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
     public string? TryPair(string supplied)
     {
         lock (_gate)
         {
-            if (_used || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(pairingCode), Encoding.UTF8.GetBytes(supplied ?? ""))) return null;
+            if (_used || DateTimeOffset.UtcNow > _expires || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(pairingCode), Encoding.UTF8.GetBytes(supplied ?? ""))) return null;
             _used = true;
             return _token;
         }
@@ -215,7 +216,7 @@ internal sealed class RootStore
     {
         resolved = "";
         var root = GetPath(id);
-        if (root is null || Path.IsPathRooted(relative) || relative.Contains('\') || relative.Split('/').Any(s => s == ".." || s == ".")) return false;
+        if (root is null || (Directory.Exists(root) && (File.GetAttributes(root) & FileAttributes.ReparsePoint) != 0) || Path.IsPathRooted(relative) || relative.Contains('\') || relative.Split('/').Any(s => s == ".." || s == ".")) return false;
         var candidate = Path.GetFullPath(Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar)));
         var prefix = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root)) + Path.DirectorySeparatorChar;
         if (!candidate.Equals(Path.GetFullPath(root), StringComparison.OrdinalIgnoreCase) &&
