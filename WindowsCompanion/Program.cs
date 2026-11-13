@@ -270,11 +270,21 @@ public static IResult Transfer(TransferRequest request, RootStore roots, bool mo
 }
 internal static void CopyDirectory(string source, string destination)
 {
+    if ((File.GetAttributes(source) & FileAttributes.ReparsePoint) != 0)
+        throw new IOException("Copying reparse points is not permitted.");
     Directory.CreateDirectory(destination);
     foreach (var file in Directory.EnumerateFiles(source))
+    {
+        if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Copying reparse points is not permitted.");
         File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), false);
+    }
     foreach (var directory in Directory.EnumerateDirectories(source))
+    {
+        if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+            throw new IOException("Copying reparse points is not permitted.");
         CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+    }
 }
 }
 internal sealed record PairRequest(string Code);
