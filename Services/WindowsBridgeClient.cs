@@ -69,6 +69,19 @@ namespace ZENTRIX
    return result;
   }
 
+  public async Task UploadAsync(string rootId, string relativePath, StorageFile source)
+  {
+   EnsurePaired();
+   using (IRandomAccessStream stream = await source.OpenAsync(FileAccessMode.Read))
+   {
+    var content = new HttpStreamContent(stream.GetInputStreamAt(0));
+    content.Headers.ContentLength = (ulong)stream.Size;
+    var uri = new Uri(_baseUri, "api/v1/content?rootId=" + Uri.EscapeDataString(rootId) + "&path=" + Uri.EscapeDataString(relativePath));
+    var response = await _http.PutAsync(uri, content);
+    response.EnsureSuccessStatusCode();
+   }
+  }
+
   public async Task DownloadToAsync(string rootId, string relativePath, StorageFile destination)
   {
    EnsurePaired();
