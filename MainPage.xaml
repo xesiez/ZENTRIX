@@ -1,7 +1,7 @@
 <Page x:Class="ZENTRIX.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource ColorBackgroundBrush}" NavigationCacheMode="Enabled">
  <Grid x:Name="ContentRoot" Background="{StaticResource ColorBackgroundBrush}" GotFocus="OnContentRootGotFocus">
   <SplitView IsPaneOpen="True" DisplayMode="Inline" OpenPaneLength="224" CompactPaneLength="72">
-   <SplitView.Pane><Grid Background="{StaticResource SidebarBrush}"><StackPanel Padding="16,24,16,16">
+   <SplitView.Pane><Grid Background="{StaticResource SidebarBrush}"><StackPanel Margin="16,24,16,16">
     <TextBlock Text="ZENTRIX" Style="{StaticResource PageTitleTextStyle}" Margin="4,0,0,28" />
     <Button x:Name="FilesNavButton" Content="Files" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnFilesNavClick" Margin="0,0,0,8" />
     <Button Content="Home" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnHomeNavClick" Margin="0,0,0,8" />
@@ -9,7 +9,7 @@
     <Button Content="Phone Link" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnPhoneLinkNavClick" />
     <TextBlock Text="XBOX SERIES X" Style="{StaticResource MetadataTextStyle}" Foreground="{StaticResource ColorTextMutedBrush}" Margin="4,28,0,0" />
    </StackPanel></Grid></SplitView.Pane>
-   <SplitView.Content><Grid Padding="32,24,32,16">
+   <SplitView.Content><Grid Margin="32,24,32,16">
     <Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /><RowDefinition Height="56" /></Grid.RowDefinitions>
     <StackPanel Grid.Row="0" VerticalAlignment="Center">
      <TextBlock x:Name="SectionTitle" Text="Files" Style="{StaticResource PageTitleTextStyle}" />
@@ -24,7 +24,7 @@
        <Button Content="Back" Style="{StaticResource ConsoleButtonStyle}" Click="OnBackClick" />
       </StackPanel>
       <ListView x:Name="FilesListView" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnFileItemClick" SelectionMode="None" Background="Transparent" ItemContainerStyle="{StaticResource ConsoleListViewItemStyle}">
-       <ListView.ItemTemplate><DataTemplate><Grid Padding="12,8">
+       <ListView.ItemTemplate><DataTemplate><Grid Margin="12,8">
         <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
         <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource ColorAccentBrightBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" />
         <StackPanel Grid.Column="1" VerticalAlignment="Center">
