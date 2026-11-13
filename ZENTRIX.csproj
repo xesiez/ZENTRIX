@@ -27,7 +27,7 @@
   <Compile Include="MainPage.xaml.cs"><DependentUpon>MainPage.xaml</DependentUpon></Compile>
   <Page Include="Styles\Tokens.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\Typography.xaml"><Generator>MSBuild:Compile</Generator></Page>
   <Page Include="Styles\FocusStates.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\Controls.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\LegacyBridge.xaml"><Generator>MSBuild:Compile</Generator></Page>
-  <Compile Include="Models\FileEntry.cs" /><Compile Include="Properties\AssemblyInfo.cs" />
+  <Compile Include="Models\FileEntry.cs" /><Compile Include="Services\ExplorerStorageService.cs" /><Compile Include="Properties\AssemblyInfo.cs" />
   <AppxManifest Include="Package.appxmanifest" />
   <Content Include="Assets\Square150x150Logo.png" /><Content Include="Assets\Square44x44Logo.png" /><Content Include="Assets\StoreLogo.png" /><Content Include="Assets\Wide310x150Logo.png" />
  </ItemGroup>
