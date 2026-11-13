@@ -35,7 +35,7 @@ namespace ZENTRIX
    _pageLifecycleVersion++;
    if (_currentFolder == null && !_isShowingRemovableRoot) await LoadAppStorageAsync();
    else await ReloadCurrentLocationAsync();
-   if (_lastFocusedControl == null && FilesNavButton != null) FilesNavButton.Focus(FocusState.Programmatic);
+   if (_lastFocusedControl == null && FilesListView != null) FilesListView.Focus(FocusState.Programmatic);
   }
 
   protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -57,8 +57,8 @@ namespace ZENTRIX
    {
     if (_isPageActive && _lastFocusedControl != null && _lastFocusedControl.IsLoaded)
      _lastFocusedControl.Focus(FocusState.Programmatic);
-    else if (_isPageActive && FilesNavButton != null)
-     FilesNavButton.Focus(FocusState.Programmatic);
+    else if (_isPageActive && FilesListView != null)
+     FilesListView.Focus(FocusState.Programmatic);
    });
   }
 
@@ -152,20 +152,9 @@ namespace ZENTRIX
   private void ShowFilesWorkspace(string title, string subtitle)
   {
    SectionTitle.Text = title; SectionSubtitle.Text = subtitle;
-   FilesWorkspace.Visibility = Visibility.Visible; PlaceholderPanel.Visibility = Visibility.Collapsed;
+   FilesWorkspace.Visibility = Visibility.Visible;
   }
 
-  private void ShowPlaceholder(string title, string description)
-  {
-   SectionTitle.Text = title; SectionSubtitle.Text = "ZENTRIX";
-   FilesWorkspace.Visibility = Visibility.Collapsed; PlaceholderPanel.Visibility = Visibility.Visible;
-   PlaceholderTitle.Text = title; PlaceholderText.Text = description;
-  }
-
-  private async void OnFilesNavClick(object sender, RoutedEventArgs e) { await ReloadCurrentLocationAsync(); }
-  private void OnHomeNavClick(object sender, RoutedEventArgs e) { ShowPlaceholder("Home", "Your console overview and shortcuts will appear here."); }
-  private void OnMusicNavClick(object sender, RoutedEventArgs e) { ShowPlaceholder("Music", "The ZENTRIX audio library and playback experience will appear here."); }
-  private void OnPhoneLinkNavClick(object sender, RoutedEventArgs e) { ShowPlaceholder("Phone Link", "Secure device pairing and synchronization will appear here."); }
   private async void OnAppStorageClick(object sender, RoutedEventArgs e) { await LoadAppStorageAsync(); }
   private async void OnUsbClick(object sender, RoutedEventArgs e) { await LoadRemovableStorageAsync(false); }
 
