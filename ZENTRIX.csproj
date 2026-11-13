@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+ <PropertyGroup>
+  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration><Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+  <ProjectGuid>{A19D3B2C-7E64-4D37-9B3D-6C0D8E5A2F10}</ProjectGuid>
+  <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  <OutputType>AppContainerExe</OutputType><RootNamespace>ZENTRIX</RootNamespace><AssemblyName>ZENTRIX</AssemblyName>
+  <DefaultLanguage>en-US</DefaultLanguage><TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
+  <TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion><TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+  <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion><LangVersion>7.3</LangVersion><PlatformTarget>x64</PlatformTarget><Prefer32Bit>false</Prefer32Bit>
+  <AppxPackage>true</AppxPackage><AppxPackageSigningEnabled>false</AppxPackageSigningEnabled><GenerateAppxPackageOnBuild>false</GenerateAppxPackageOnBuild><AppxBundle>Never</AppxBundle>
+  <RestoreProjectStyle>PackageReference</RestoreProjectStyle><FileAlignment>512</FileAlignment>
+ </PropertyGroup>
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+  <DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><DefineConstants>DEBUG;TRACE;NETFX_CORE</DefineConstants><OutputPath>bin\x64\Debug\</OutputPath><WarningLevel>4</WarningLevel>
+ </PropertyGroup>
+ <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  <DebugType>pdbonly</DebugType><Optimize>true</Optimize><DefineConstants>TRACE;NETFX_CORE</DefineConstants><OutputPath>bin\x64\Release\</OutputPath><WarningLevel>4</WarningLevel>
+ </PropertyGroup>
+ <ItemGroup><PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform" Version="6.2.14" /></ItemGroup>
+ <ItemGroup><Reference Include="System" /><Reference Include="System.Core" /><Reference Include="System.Runtime" /><Reference Include="System.Runtime.InteropServices.WindowsRuntime" /><Reference Include="System.ObjectModel" /></ItemGroup>
+ <ItemGroup>
+  <ApplicationDefinition Include="App.xaml"><Generator>MSBuild:Compile</Generator><SubType>Designer</SubType></ApplicationDefinition>
+  <Compile Include="App.xaml.cs"><DependentUpon>App.xaml</DependentUpon></Compile>
+  <Page Include="MainPage.xaml"><Generator>MSBuild:Compile</Generator><SubType>Designer</SubType></Page>
+  <Compile Include="MainPage.xaml.cs"><DependentUpon>MainPage.xaml</DependentUpon></Compile>
+  <Page Include="Styles\Tokens.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\Typography.xaml"><Generator>MSBuild:Compile</Generator></Page>
+  <Page Include="Styles\FocusStates.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\Controls.xaml"><Generator>MSBuild:Compile</Generator></Page><Page Include="Styles\LegacyBridge.xaml"><Generator>MSBuild:Compile</Generator></Page>
+  <Compile Include="Models\FileEntry.cs" /><Compile Include="Properties\AssemblyInfo.cs" />
+  <AppxManifest Include="Package.appxmanifest" />
+  <Content Include="Assets\Square150x150Logo.png" /><Content Include="Assets\Square44x44Logo.png" /><Content Include="Assets\StoreLogo.png" /><Content Include="Assets\Wide310x150Logo.png" />
+ </ItemGroup>
+ <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
+</Project>
