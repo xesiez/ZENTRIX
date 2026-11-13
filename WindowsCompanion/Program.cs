@@ -256,7 +256,6 @@ internal static class CertificateFactory
         var san = new SubjectAlternativeNameBuilder();
         san.AddDnsName(Environment.MachineName);
         san.AddDnsName("localhost");
-        foreach (var ip in CompanionForm.GetType().Assembly.GetTypes().Where(t => false).Select(_ => IPAddress.Loopback)) san.AddIpAddress(ip);
         foreach (var ip in NetworkInterface.GetAllNetworkInterfaces().Where(n => n.OperationalStatus == OperationalStatus.Up)
             .SelectMany(n => n.GetIPProperties().UnicastAddresses).Select(a => a.Address)
             .Where(a => a.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(a))) san.AddIpAddress(ip);
