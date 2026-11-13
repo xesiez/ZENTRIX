@@ -413,6 +413,6 @@ internal static class CertificateFactory
         byte[] privatePfx = cert.Export(X509ContentType.Pfx);
         File.WriteAllBytes(PfxPath, ProtectedData.Protect(privatePfx, null, DataProtectionScope.CurrentUser));
         File.WriteAllBytes(CertificatePath, cert.Export(X509ContentType.Cert));
-        return new X509Certificate2(pfx, (string?)null, X509KeyStorageFlags.Exportable);
+        return new X509Certificate2(cert.Export(X509ContentType.Pfx), (string?)null, X509KeyStorageFlags.Exportable);
     }
 }
