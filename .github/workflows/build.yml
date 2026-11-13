@@ -40,7 +40,7 @@ jobs:
           & $msbuild .\ZENTRIX.sln /restore /m /t:Build /p:Configuration=Release /p:Platform=x64 /p:AppxPackage=true /p:GenerateAppxPackageOnBuild=true /p:AppxBundle=Never /p:UapAppxPackageBuildMode=SideloadOnly "/p:AppxPackageDir=$packageDir\" /p:AppxPackageSigningEnabled=true "/p:PackageCertificateKeyFile=$pfxPath" "/p:PackageCertificatePassword=$plainPassword" /verbosity:minimal
           if ($LASTEXITCODE -ne 0) { throw "UWP Release packaging failed with exit code $LASTEXITCODE." }
 
-          $mainPackage = Get-ChildItem -Path $packageDir -Recurse -File -Filter *.appx |
+          $mainPackage = Get-ChildItem -Path $packageDir -Recurse -File | Where-Object { $_.Extension -in '.appx', '.msix' } |
             Where-Object { $_.FullName -notmatch '[\\/]Dependencies[\\/]' } |
             Sort-Object LastWriteTime -Descending |
             Select-Object -First 1
@@ -51,7 +51,7 @@ jobs:
           $stageDir = Join-Path $env:RUNNER_TEMP "ZENTRIX-Xbox-x64-Complete"
           if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force }
           New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
-          Copy-Item $mainPackage.FullName (Join-Path $stageDir "ZENTRIX-x64.appx") -Force
+          Copy-Item $mainPackage.FullName (Join-Path $stageDir ("ZENTRIX-x64" + $mainPackage.Extension)) -Force
           Copy-Item $cerPath (Join-Path $stageDir "ZENTRIX-CI.cer") -Force
 
           $dependencyPackages = Get-ChildItem -Path $packageDir -Recurse -File -Filter *.appx |
@@ -68,14 +68,14 @@ jobs:
           ZENTRIX - Xbox Series X/S UWP sideload package
 
           Contents:
-          - ZENTRIX-x64.appx: signed application package
+          - ZENTRIX-x64.msix or ZENTRIX-x64.appx: signed application package
           - Dependencies/x64: framework packages emitted by the UWP packaging toolchain, when required
           - ZENTRIX-CI.cer: certificate corresponding to the package signature
 
           Installation:
           1. Extract this ZIP.
           2. Open Xbox Device Portal while the console is in Developer Mode.
-          3. Deploy ZENTRIX-x64.appx and select the certificate and any framework packages in Dependencies/x64 when prompted.
+          3. Deploy ZENTRIX-x64.msix (or .appx) and select the certificate and any framework packages in Dependencies/x64 when prompted.
           4. If the portal reports a missing framework package, install the matching x64 framework package from this bundle.
 
           IMPORTANT:
