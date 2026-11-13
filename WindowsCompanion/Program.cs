@@ -87,14 +87,16 @@ internal sealed class CompanionForm : Form
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(47830); // Public certificate bootstrap only; all other HTTP paths are blocked below.\n                options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
+                options.ListenAnyIP(47830); // Public certificate bootstrap only; all other HTTP paths are blocked below.
+                options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
             });
             builder.Services.AddSingleton(_store);
             builder.Services.AddSingleton(new AuthState(_pairCode));
             var app = builder.Build();
             app.Use(async (ctx, next) =>
             {
-                if (ctx.Request.Path == "/api/v1/health" || ctx.Request.Path == "/api/v1/pair")
+                if (!ctx.Request.IsHttps && ctx.Request.Path != "/bootstrap/certificate") { ctx.Response.StatusCode = 404; return; }
+                if (ctx.Request.Path == "/api/v1/health" || ctx.Request.Path == "/api/v1/pair" || ctx.Request.Path == "/bootstrap/certificate")
                 { await next(); return; }
                 var auth = ctx.RequestServices.GetRequiredService<AuthState>();
                 if (!auth.IsAuthorized(ctx.Request.Headers.Authorization.ToString()))
