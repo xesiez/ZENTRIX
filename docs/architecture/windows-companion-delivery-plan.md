@@ -93,13 +93,26 @@ Enable only after WP3 and security gates pass:
 | Mutations | create, rename, copy, move, delete, overwrite confirmation, concurrent conflict |
 | UX | controller focus, back navigation, error recovery, local storage while bridge offline |
 
-## Current verified state
+## Current implementation snapshot (2026-11-13)
 
-- Branch exists at the baseline SHA above.
-- Architecture decision document exists at `docs/architecture/windows-usb-bridge.md`.
+- Branch: `feat/windows-usb-bridge`; all changes remain isolated from `main`.
 - Xbox manifest declares `privateNetworkClientServer`; it does not declare `removableStorage`.
-- No Windows companion executable, pairing implementation, remote explorer, mutation endpoints, or Xbox physical-device HTTPS result has been verified yet.
+- Windows Companion source exists under `WindowsCompanion/` (.NET 8 WinForms + Kestrel).
+- Companion UI supports approving individual folders and ready removable USB drives, revoking roots, starting/stopping the service, and displaying the one-use pairing code.
+- Companion API source includes HTTPS pairing, five-minute code expiry, one-use pairing, failed-attempt lockout, bearer authentication, approved-root listing, remote directory listing, streamed download/upload, create-directory, copy, move, rename, and delete endpoints.
+- A public-certificate bootstrap endpoint is exposed on HTTP port 47830 only; middleware rejects all other plaintext HTTP routes. Authenticated file APIs use HTTPS on port 47831.
+- Xbox UWP source now contains a strict-default-validation HTTPS client, Windows PC pairing flow, remote root/folder browsing, remote file download/open, local-to-Windows upload, and remote create/rename/copy/move/delete menu actions.
+- A Windows Companion CI run succeeded at commit `e8404b66c170f57ffbc82d8da84072b3d43b18e2` before the later certificate-bootstrap and USB-drive-picker additions. Newer CI runs are pending after the latest code changes.
+- An earlier Xbox UWP build compiled and packaged the app at commit `1c4811efc97e7dcf64874b047d8b8d0dd6246538`; the package-collection step then required a fix because MSBuild emitted `.msix`, not `.appx`. The corrected workflow is being re-run.
+- No physical Xbox certificate-trust, real USB disconnect/reconnect, or end-to-end file-operation test has been completed.
 
-## Immediate next implementation step
+## Remaining release gates
 
-Create the separate Windows Companion project and implement only its approved-root selection plus minimal health endpoint. Keep the endpoint unavailable to the Xbox until WP0 establishes a valid certificate trust path. Then implement pairing and read-only browsing.
+1. Obtain green CI for the latest Windows Companion and Xbox package commits.
+2. Install the Windows Companion and Xbox package on the actual Windows PC and Xbox Series X.
+3. Import the public companion certificate into the Xbox trusted-root store after comparing its fingerprint; verify that UWP HTTPS succeeds without bypassing validation.
+4. Test wrong-hostname/untrusted/expired certificate rejection.
+5. Test large-file transfer, USB unplug/replug, Wi-Fi loss, host restart, and all destructive operations.
+6. Fix any device-specific failures and publish a signed test bundle plus acceptance report.
+
+The current source is an integration candidate, not yet a release-certified build.
