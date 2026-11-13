@@ -222,8 +222,9 @@ internal sealed class CompanionForm : Form
             _server = app;
             _start.Enabled = false; _stop.Enabled = true;
             var addresses = GetLocalAddresses();
-            _status.Text = "HTTPS service active on port 47831. Pair code (one use): " + _pairCode + Environment.NewLine + "Host addresses: " + string.Join(", ", addresses);
-            MessageBox.Show(this, "Pairing code: " + _pairCode + Environment.NewLine + Environment.NewLine + "Certificate: " + CertificateFactory.CertificatePath + Environment.NewLine + "Export this certificate and establish Xbox trust before attempting pairing. Do not bypass certificate validation.", "ZENTRIX pairing", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            string fingerprint = Convert.ToHexString(SHA256.HashData(cert.RawData));
+            _status.Text = "HTTPS service active on port 47831. Pair code (one use): " + _pairCode + Environment.NewLine + "Host addresses: " + string.Join(", ", addresses) + Environment.NewLine + "Certificate SHA-256: " + fingerprint;
+            MessageBox.Show(this, "In ZENTRIX on Xbox, enter the Windows IP, the one-use pairing code, and the SHA-256 fingerprint shown here. ZENTRIX will download only the public certificate over the bootstrap endpoint, verify the fingerprint, install it into its app-specific trusted-root store, and then pair over HTTPS with normal certificate validation." + Environment.NewLine + Environment.NewLine + "Pairing code (one use): " + _pairCode + Environment.NewLine + "Certificate bootstrap: http://<Windows-IP>:47830/bootstrap/certificate" + Environment.NewLine + "HTTPS API: https://<Windows-IP>:47831" + Environment.NewLine + "Fingerprint SHA-256: " + fingerprint, "ZENTRIX secure pairing", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         catch (Exception ex)
         {
