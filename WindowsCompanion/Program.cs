@@ -250,12 +250,19 @@ internal sealed class AuthState(string pairingCode)
     private readonly object _gate = new();
     private bool _used;
     private readonly DateTimeOffset _expires = DateTimeOffset.UtcNow.AddMinutes(5);
-    private readonly string _token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+    private readonly string _token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));\n    private int _failedAttempts;\n    private DateTimeOffset _blockedUntil = DateTimeOffset.MinValue;
     public string? TryPair(string supplied)
     {
         lock (_gate)
         {
-            if (_used || DateTimeOffset.UtcNow > _expires || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(pairingCode), Encoding.UTF8.GetBytes(supplied ?? ""))) return null;
+            var now = DateTimeOffset.UtcNow;
+            if (_used || now > _expires || now < _blockedUntil) return null;
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(pairingCode), Encoding.UTF8.GetBytes(supplied ?? "")))
+            {
+                _failedAttempts++;
+                if (_failedAttempts >= 5) _blockedUntil = now.AddMinutes(10);
+                return null;
+            }
             _used = true;
             return _token;
         }
