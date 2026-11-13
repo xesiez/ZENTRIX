@@ -18,6 +18,10 @@ namespace ZENTRIX
  {
   private readonly ObservableCollection<FileEntry> _items = new ObservableCollection<FileEntry>();
   private readonly ExplorerStorageService _storageService = new ExplorerStorageService();
+  private WindowsBridgeClient _bridgeClient;
+  private string _remoteRootId;
+  private string _remoteCurrentPath = String.Empty;
+  private bool _isRemoteLocation;
   private readonly Stack<ExplorerLocation> _history = new Stack<ExplorerLocation>();
   private StorageFolder _currentFolder;
   private bool _isShowingRemovableRoot;
@@ -91,7 +95,12 @@ namespace ZENTRIX
 
   private async Task ReloadCurrentLocationAsync()
   {
-   if (_isShowingRemovableRoot) await LoadRemovableStorageAsync(true);
+   if (_isRemoteLocation)
+   {
+    if (String.IsNullOrEmpty(_remoteRootId)) await LoadRemoteRootsAsync();
+    else await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
+   }
+   else if (_isShowingRemovableRoot) await LoadRemovableStorageAsync(true);
    else if (_currentFolder != null) await LoadFolderAsync(_currentFolder, false);
    else await LoadAppStorageAsync();
   }
@@ -100,6 +109,7 @@ namespace ZENTRIX
   {
    if (!_isPageActive) return;
    _history.Clear();
+   _isRemoteLocation = false; _remoteRootId = null; _remoteCurrentPath = String.Empty;
    _isShowingRemovableRoot = false;
    await LoadFolderAsync(_storageService.GetAppLocalRoot(), false);
   }
@@ -203,7 +213,74 @@ namespace ZENTRIX
   }
 
   private async void OnAppStorageClick(object sender, RoutedEventArgs e) { await LoadAppStorageAsync(); }
-  private async void OnUsbClick(object sender, RoutedEventArgs e) { await LoadRemovableStorageAsync(false); }
+  private async void OnWindowsPcClick(object sender, RoutedEventArgs e)
+  {
+   if (_bridgeClient != null && _bridgeClient.IsPaired) { await LoadRemoteRootsAsync(); return; }
+   TextBox hostBox = new TextBox { PlaceholderText = "Windows PC IP address (example: 192.168.1.10)", MinWidth = 420 };
+   TextBox codeBox = new TextBox { PlaceholderText = "One-time pairing code", MinWidth = 420 };
+   StackPanel panel = new StackPanel();
+   panel.Children.Add(new TextBlock { Text = "Enter the address shown by ZENTRIX Windows Companion, then its temporary pairing code." });
+   panel.Children.Add(hostBox); panel.Children.Add(codeBox);
+   ContentDialog dialog = new ContentDialog { Title = "Connect to Windows PC", Content = panel, PrimaryButtonText = "Pair securely", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+   if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+   try
+   {
+    WindowsBridgeClient client = new WindowsBridgeClient();
+    await client.PairAsync(hostBox.Text, codeBox.Text);
+    _bridgeClient = client;
+    await LoadRemoteRootsAsync();
+   }
+   catch (Exception ex)
+   {
+    StatusText.Text = "Secure connection failed. Check the address and certificate trust.";
+    ContentDialog error = new ContentDialog { Title = "Secure connection failed", Content = ex.Message, CloseButtonText = "OK" };
+    await error.ShowAsync();
+   }
+  }
+
+  private async Task LoadRemoteRootsAsync()
+  {
+   if (_bridgeClient == null || !_bridgeClient.IsPaired) return;
+   _isRemoteLocation = true; _remoteRootId = null; _remoteCurrentPath = String.Empty;
+   ShowFilesWorkspace("Windows PC", "Approved shared folders");
+   _items.Clear(); StatusText.Text = "Loading shared folders...";
+   try
+   {
+    IReadOnlyList<RemoteEntry> roots = await _bridgeClient.GetRootsAsync();
+    foreach (RemoteEntry root in roots)
+     _items.Add(new FileEntry { Name = root.Name, Details = "Shared folder", IconGlyph = "\uE8B7", RemoteRootId = root.RootId, RemotePath = String.Empty, IsRemoteFolder = true });
+    StatusText.Text = roots.Count == 0 ? "No folders are shared. Approve a folder in Windows Companion." : roots.Count + " shared folder(s)";
+   }
+   catch (Exception ex) { StatusText.Text = "Windows PC unavailable: " + ex.Message; }
+  }
+
+  private async Task LoadRemoteEntriesAsync(string rootId, string path)
+  {
+   if (_bridgeClient == null) return;
+   _isRemoteLocation = true; _remoteRootId = rootId; _remoteCurrentPath = path ?? String.Empty;
+   ShowFilesWorkspace("Windows PC", String.IsNullOrEmpty(path) ? "Shared folder" : path);
+   _items.Clear(); StatusText.Text = "Loading remote folder...";
+   try
+   {
+    IReadOnlyList<RemoteEntry> entries = await _bridgeClient.GetEntriesAsync(rootId, path);
+    foreach (RemoteEntry remote in entries)
+     _items.Add(new FileEntry { Name = remote.Name, Details = remote.Type == "directory" ? "Folder" : (remote.Size.HasValue ? remote.Size.Value.ToString() + " bytes" : "File"), IconGlyph = remote.Type == "directory" ? "\uE8B7" : "\uE8A5", RemoteRootId = rootId, RemotePath = remote.Path, IsRemoteFolder = remote.Type == "directory" });
+    StatusText.Text = entries.Count == 0 ? "This remote folder is empty." : entries.Count + " item(s)";
+   }
+   catch (Exception ex) { StatusText.Text = "Remote location unavailable: " + ex.Message; }
+  }
+
+  private async Task OpenRemoteFileAsync(FileEntry entry)
+  {
+   try
+   {
+    StorageFile local = await ApplicationData.Current.LocalFolder.CreateFileAsync(Guid.NewGuid().ToString("N") + "_" + entry.Name, CreationCollisionOption.GenerateUniqueName);
+    await _bridgeClient.DownloadToAsync(entry.RemoteRootId, entry.RemotePath, local);
+    bool launched = await Launcher.LaunchFileAsync(local);
+    StatusText.Text = launched ? "Remote file downloaded and opened." : "File downloaded; no compatible app is available.";
+   }
+   catch (Exception ex) { StatusText.Text = "Download failed: " + ex.Message; }
+  }
 
   private async void OnBackClick(object sender, RoutedEventArgs e)
   {
@@ -212,6 +289,18 @@ namespace ZENTRIX
 
   private async Task GoBackAsync()
   {
+   if (_isRemoteLocation)
+   {
+    if (!String.IsNullOrEmpty(_remoteRootId) && !String.IsNullOrEmpty(_remoteCurrentPath))
+    {
+     int slash = _remoteCurrentPath.LastIndexOf('/');
+     string parent = slash < 0 ? String.Empty : _remoteCurrentPath.Substring(0, slash);
+     await LoadRemoteEntriesAsync(_remoteRootId, parent);
+    }
+    else if (!String.IsNullOrEmpty(_remoteRootId)) await LoadRemoteRootsAsync();
+    else await LoadAppStorageAsync();
+    return;
+   }
    if (_history.Count > 0)
    {
     ExplorerLocation previous = _history.Pop();
@@ -257,6 +346,16 @@ namespace ZENTRIX
   {
    FileEntry entry = e.ClickedItem as FileEntry;
    if (entry == null) return;
+   if (!String.IsNullOrEmpty(entry.RemoteRootId))
+   {
+    if (entry.IsRemoteFolder)
+    {
+     if (String.IsNullOrEmpty(entry.RemotePath)) await LoadRemoteEntriesAsync(entry.RemoteRootId, String.Empty);
+     else await LoadRemoteEntriesAsync(entry.RemoteRootId, entry.RemotePath);
+    }
+    else await OpenRemoteFileAsync(entry);
+    return;
+   }
    if (entry.Folder != null) { await LoadFolderAsync(entry.Folder, true); return; }
    if (entry.File == null) return;
    try
