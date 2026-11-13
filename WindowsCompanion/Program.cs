@@ -29,7 +29,7 @@ internal sealed class CompanionForm : Form
 {
     private readonly ListBox _roots = new() { Dock = DockStyle.Fill, IntegralHeight = false };
     private readonly Label _status = new() { Dock = DockStyle.Bottom, Height = 54, TextAlign = ContentAlignment.MiddleLeft };
-    private readonly Button _add = new() { Text = "Approve folder…", AutoSize = true };
+    private readonly Button _add = new() { Text = "Approve folder…", AutoSize = true };\n    private readonly Button _addDrive = new() { Text = "Approve USB drive…", AutoSize = true };
     private readonly Button _remove = new() { Text = "Revoke selected", AutoSize = true };
     private readonly Button _start = new() { Text = "Start secure service", AutoSize = true };
     private readonly Button _stop = new() { Text = "Stop service", AutoSize = true, Enabled = false };
@@ -46,10 +46,10 @@ internal sealed class CompanionForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         var heading = new Label { Text = "ZENTRIX  /  WINDOWS COMPANION", Dock = DockStyle.Top, Height = 58, Padding = new Padding(16), Font = new Font("Segoe UI", 15, FontStyle.Bold) };
         var toolbar = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 48, Padding = new Padding(12, 6, 12, 4) };
-        toolbar.Controls.AddRange([_add, _remove, _start, _stop]);
+        toolbar.Controls.AddRange([_add, _addDrive, _remove, _start, _stop]);
         var note = new Label { Dock = DockStyle.Bottom, Height = 74, Padding = new Padding(12), Text = "Only folders explicitly approved here are exposed. Keep Windows on a private network. HTTPS uses a local development certificate; the Xbox must independently trust the issuing certificate before pairing can be considered secure." };
         Controls.Add(_roots); Controls.Add(note); Controls.Add(_status); Controls.Add(toolbar); Controls.Add(heading);
-        _add.Click += (_, _) => AddRoot();
+        _add.Click += (_, _) => AddRoot();\n        _addDrive.Click += (_, _) => AddRemovableDrive();
         _remove.Click += (_, _) => RemoveRoot();
         _start.Click += async (_, _) => await StartServerAsync();
         _stop.Click += async (_, _) => await StopServerAsync();
@@ -64,6 +64,25 @@ internal sealed class CompanionForm : Form
         if (picker.ShowDialog(this) != DialogResult.OK || string.IsNullOrWhiteSpace(picker.SelectedPath)) return;
         try { _store.Add(picker.SelectedPath); RefreshRoots(); }
         catch (Exception ex) { MessageBox.Show(this, ex.Message, "Could not approve folder", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+    }
+
+    private void AddRemovableDrive()
+    {
+        var drives = DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Removable && d.IsReady).ToArray();
+        if (drives.Length == 0)
+        {
+            MessageBox.Show(this, "No ready removable USB drives were detected.", "USB drives", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        using var picker = new Form { Text = "Approve USB drive", Width = 440, Height = 170, StartPosition = FormStartPosition.CenterParent, FormBorderStyle = FormBorderStyle.FixedDialog, MinimizeBox = false, MaximizeBox = false };
+        var combo = new ComboBox { Left = 16, Top = 16, Width = 390, DropDownStyle = ComboBoxStyle.DropDownList };
+        foreach (var drive in drives) combo.Items.Add(drive.Name + "  " + drive.VolumeLabel);
+        combo.SelectedIndex = 0;
+        var approve = new Button { Text = "Approve selected drive", Left = 16, Top = 58, Width = 180, DialogResult = DialogResult.OK };
+        picker.Controls.Add(combo); picker.Controls.Add(approve); picker.AcceptButton = approve;
+        if (picker.ShowDialog(this) != DialogResult.OK || combo.SelectedIndex < 0) return;
+        try { _store.Add(drives[combo.SelectedIndex].RootDirectory.FullName); RefreshRoots(); }
+        catch (Exception ex) { MessageBox.Show(this, ex.Message, "Could not approve USB drive", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 
     private void RemoveRoot()
