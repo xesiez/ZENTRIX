@@ -29,7 +29,8 @@ internal sealed class CompanionForm : Form
 {
     private readonly ListBox _roots = new() { Dock = DockStyle.Fill, IntegralHeight = false };
     private readonly Label _status = new() { Dock = DockStyle.Bottom, Height = 54, TextAlign = ContentAlignment.MiddleLeft };
-    private readonly Button _add = new() { Text = "Approve folder…", AutoSize = true };\n    private readonly Button _addDrive = new() { Text = "Approve USB drive…", AutoSize = true };
+    private readonly Button _add = new() { Text = "Approve folder…", AutoSize = true };
+    private readonly Button _addDrive = new() { Text = "Approve USB drive…", AutoSize = true };
     private readonly Button _remove = new() { Text = "Revoke selected", AutoSize = true };
     private readonly Button _start = new() { Text = "Start secure service", AutoSize = true };
     private readonly Button _stop = new() { Text = "Stop service", AutoSize = true, Enabled = false };
