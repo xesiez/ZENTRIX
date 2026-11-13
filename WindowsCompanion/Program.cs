@@ -391,7 +391,12 @@ internal static class CertificateFactory
     public static X509Certificate2 LoadOrCreate()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(PfxPath)!);
-        if (File.Exists(PfxPath)) return new X509Certificate2(PfxPath, (string?)null, X509KeyStorageFlags.Exportable);
+        if (File.Exists(PfxPath))
+        {
+            byte[] protectedPfx = File.ReadAllBytes(PfxPath);
+            byte[] pfx = ProtectedData.Unprotect(protectedPfx, null, DataProtectionScope.CurrentUser);
+            return new X509Certificate2(pfx, (string?)null, X509KeyStorageFlags.Exportable);
+        }
         using var rsa = RSA.Create(3072);
         var req = new CertificateRequest("CN=ZENTRIX-Companion-Development", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var san = new SubjectAlternativeNameBuilder();
@@ -405,7 +410,7 @@ internal static class CertificateFactory
         req.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, true));
         req.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension(new OidCollection { new("1.3.6.1.5.5.7.3.1") }, true));
         using var cert = req.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(2));
-        File.WriteAllBytes(PfxPath, cert.Export(X509ContentType.Pfx));
+        byte[] privatePfx = cert.Export(X509ContentType.Pfx);\n        File.WriteAllBytes(PfxPath, ProtectedData.Protect(privatePfx, null, DataProtectionScope.CurrentUser));
         File.WriteAllBytes(CertificatePath, cert.Export(X509ContentType.Cert));
         return new X509Certificate2(PfxPath, (string?)null, X509KeyStorageFlags.Exportable);
     }
