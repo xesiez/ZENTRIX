@@ -21,7 +21,8 @@
       <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
        <Button Content="App storage" Style="{StaticResource ConsoleButtonStyle}" Click="OnAppStorageClick" Margin="0,0,12,0" />
        <Button Content="USB devices" Style="{StaticResource ConsoleButtonStyle}" Click="OnUsbClick" Margin="0,0,12,0" />
-       <Button Content="Back" Style="{StaticResource ConsoleButtonStyle}" Click="OnBackClick" />
+       <Button Content="Back" Style="{StaticResource ConsoleButtonStyle}" Click="OnBackClick" Margin="0,0,12,0" />
+       <Button x:Name="OptionsButton" Content="Options" Style="{StaticResource ConsoleButtonStyle}" Click="OnOptionsClick" />
       </StackPanel>
       <ListView x:Name="FilesListView" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnFileItemClick" SelectionMode="None" Background="Transparent" ItemContainerStyle="{StaticResource ConsoleListViewItemStyle}">
        <ListView.ItemTemplate><DataTemplate><Grid Margin="12,8">
