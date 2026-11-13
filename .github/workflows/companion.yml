@@ -28,6 +28,10 @@ jobs:
         run: dotnet build WindowsCompanion/ZENTRIX.Companion.csproj --configuration Release --no-restore
       - name: Publish portable Windows x64 app
         run: dotnet publish WindowsCompanion/ZENTRIX.Companion.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --output artifacts/ZENTRIX-Windows-Companion
+      - name: Include first-run instructions
+        shell: pwsh
+        run: |
+          Copy-Item WindowsCompanion/README.md artifacts/ZENTRIX-Windows-Companion/README-FIRST-RUN.txt
       - name: Package
         shell: pwsh
         run: |
