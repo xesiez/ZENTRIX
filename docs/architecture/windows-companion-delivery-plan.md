@@ -110,7 +110,7 @@ Enable only after WP3 and security gates pass:
 
 1. Obtain green CI for the latest Windows Companion and Xbox package commits.
 2. Install the Windows Companion and Xbox package on the actual Windows PC and Xbox Series X.
-3. Import the public companion certificate into the Xbox trusted-root store after comparing its fingerprint; verify that UWP HTTPS succeeds without bypassing validation.
+3. Verify the public certificate fingerprint out-of-band; let ZENTRIX add it to its app-specific trusted-root store, then verify UWP HTTPS succeeds without bypassing validation.
 4. Test wrong-hostname/untrusted/expired certificate rejection.
 5. Test large-file transfer, USB unplug/replug, Wi-Fi loss, host restart, and all destructive operations.
 6. Fix any device-specific failures and publish a signed test bundle plus acceptance report.
