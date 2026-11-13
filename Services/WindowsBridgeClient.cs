@@ -5,6 +5,7 @@ using Windows.Data.Json;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Security.Cryptography;
+using Windows.Security.Cryptography.Core;
 using Windows.Security.Cryptography.Certificates;
 using Windows.Web.Http;
 
