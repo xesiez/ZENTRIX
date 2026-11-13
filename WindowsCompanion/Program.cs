@@ -251,7 +251,8 @@ internal sealed class AuthState(string pairingCode)
     private bool _used;
     private readonly DateTimeOffset _expires = DateTimeOffset.UtcNow.AddMinutes(5);
     private readonly string _token = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
-    private int _failedAttempts;\n    private DateTimeOffset _blockedUntil = DateTimeOffset.MinValue;
+    private int _failedAttempts;
+    private DateTimeOffset _blockedUntil = DateTimeOffset.MinValue;
     public string? TryPair(string supplied)
     {
         lock (_gate)
