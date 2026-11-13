@@ -110,6 +110,7 @@ internal sealed class CompanionForm : Form
                 options.ListenAnyIP(47830); // Public certificate bootstrap only; all other HTTP paths are blocked below.
                 options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
             });
+            _pairCode = Convert.ToHexString(RandomNumberGenerator.GetBytes(4));
             builder.Services.AddSingleton(_store);
             builder.Services.AddSingleton(new AuthState(_pairCode));
             var app = builder.Build();
