@@ -135,6 +135,63 @@ internal sealed class CompanionForm : Form
                 catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
                 catch (IOException) { return Results.Problem("The volume is unavailable", statusCode: 409); }
             });
+            app.MapPost("/api/v1/directories", (PathRequest request, RootStore roots) =>
+            {
+                if (!roots.TryResolve(request.RootId, request.Path, out var target)) return Results.BadRequest(new { error = "invalid_path" });
+                try { Directory.CreateDirectory(target); return Results.Ok(new { created = true }); }
+                catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
+                catch (IOException) { return Results.Problem("The volume is unavailable or full", statusCode: 409); }
+            });
+            app.MapPut("/api/v1/content", async (string rootId, string path, HttpContext ctx, RootStore roots) =>
+            {
+                if (!roots.TryResolve(rootId, path, out var target)) return Results.BadRequest(new { error = "invalid_path" });
+                var parent = Path.GetDirectoryName(target);
+                if (parent is null || !Directory.Exists(parent)) return Results.Conflict(new { error = "parent_not_found" });
+                var temp = target + ".zentrix-" + Guid.NewGuid().ToString("N") + ".tmp";
+                try
+                {
+                    await using (var output = new FileStream(temp, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1024 * 128, FileOptions.Asynchronous | FileOptions.SequentialScan))
+                        await ctx.Request.Body.CopyToAsync(output, 1024 * 128, ctx.RequestAborted);
+                    if (File.Exists(target)) return Results.Conflict(new { error = "already_exists" });
+                    File.Move(temp, target);
+                    return Results.Ok(new { uploaded = true });
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
+                catch (IOException) { return Results.Problem("Upload failed; check free space and volume state", statusCode: 409); }
+                finally { if (File.Exists(temp)) File.Delete(temp); }
+            });
+            app.MapPost("/api/v1/operations/copy", (TransferRequest request, RootStore roots) => Transfer(request, roots, false));
+            app.MapPost("/api/v1/operations/move", (TransferRequest request, RootStore roots) => Transfer(request, roots, true));
+            app.MapPost("/api/v1/operations/rename", (RenameRequest request, RootStore roots) =>
+            {
+                if (string.IsNullOrWhiteSpace(request.NewName) || request.NewName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || request.NewName is "." or "..")
+                    return Results.BadRequest(new { error = "invalid_name" });
+                if (!roots.TryResolve(request.RootId, request.Path, out var source)) return Results.BadRequest(new { error = "invalid_path" });
+                var destination = Path.Combine(Path.GetDirectoryName(source)!, request.NewName);
+                if (File.Exists(destination) || Directory.Exists(destination)) return Results.Conflict(new { error = "already_exists" });
+                try
+                {
+                    if (Directory.Exists(source)) Directory.Move(source, destination);
+                    else if (File.Exists(source)) File.Move(source, destination);
+                    else return Results.NotFound(new { error = "not_found" });
+                    return Results.Ok(new { renamed = true });
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
+                catch (IOException) { return Results.Conflict(new { error = "operation_failed" }); }
+            });
+            app.MapDelete("/api/v1/entries", (string rootId, string path, RootStore roots) =>
+            {
+                if (!roots.TryResolve(rootId, path, out var target) || target == roots.GetPath(rootId)) return Results.BadRequest(new { error = "invalid_path" });
+                try
+                {
+                    if (Directory.Exists(target)) Directory.Delete(target, true);
+                    else if (File.Exists(target)) File.Delete(target);
+                    else return Results.NotFound(new { error = "not_found" });
+                    return Results.Ok(new { deleted = true });
+                }
+                catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
+                catch (IOException) { return Results.Conflict(new { error = "operation_failed" }); }
+            });
             await app.StartAsync();
             _server = app;
             _start.Enabled = false; _stop.Enabled = true;
@@ -182,7 +239,39 @@ internal sealed class AuthState(string pairingCode)
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(_token), Encoding.UTF8.GetBytes(header[7..]));
 }
 
-internal sealed record PairRequest(string Code);
+internal static IResult Transfer(TransferRequest request, RootStore roots, bool move)
+{
+    if (!roots.TryResolve(request.SourceRootId, request.SourcePath, out var source) ||
+        !roots.TryResolve(request.DestinationRootId, request.DestinationPath, out var destination))
+        return Results.BadRequest(new { error = "invalid_path" });
+    if (File.Exists(destination) || Directory.Exists(destination)) return Results.Conflict(new { error = "already_exists" });
+    try
+    {
+        if (Directory.Exists(source))
+        {
+            if (move) Directory.Move(source, destination);
+            else CopyDirectory(source, destination);
+        }
+        else if (File.Exists(source))
+        {
+            if (move) File.Move(source, destination);
+            else File.Copy(source, destination, false);
+        }
+        else return Results.NotFound(new { error = "not_found" });
+        return Results.Ok(new { completed = true });
+    }
+    catch (UnauthorizedAccessException) { return Results.Problem("Access denied", statusCode: 403); }
+    catch (IOException) { return Results.Conflict(new { error = "operation_failed" }); }
+}
+internal static void CopyDirectory(string source, string destination)
+{
+    Directory.CreateDirectory(destination);
+    foreach (var file in Directory.EnumerateFiles(source))
+        File.Copy(file, Path.Combine(destination, Path.GetFileName(file)), false);
+    foreach (var directory in Directory.EnumerateDirectories(source))
+        CopyDirectory(directory, Path.Combine(destination, Path.GetFileName(directory)));
+}
+internal sealed record PairRequest(string Code);\ninternal sealed record PathRequest(string RootId, string Path);\ninternal sealed record RenameRequest(string RootId, string Path, string NewName);\ninternal sealed record TransferRequest(string SourceRootId, string SourcePath, string DestinationRootId, string DestinationPath);
 internal sealed record EntryDto(string Name, string Type, long? Size, string Path);
 internal sealed record ApprovedRoot(string Id, string Name, string Path)
 {
