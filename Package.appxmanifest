@@ -1,96 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" IgnorableNamespaces="uap">
- <Identity Name="ZENTRIX" Publisher="CN=ZENTRIX" Version="1.0.0.0" />
- <mp:PhoneIdentity PhoneProductId="8e8e9c2e-4a8f-4a1c-9a3d-6c7d8e9f0a1b" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
- <Properties><DisplayName>ZENTRIX</DisplayName><PublisherDisplayName>ZENTRIX</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
- <Dependencies><TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" /></Dependencies>
- <Resources><Resource Language="en-us" /></Resources>
- <Applications><Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="ZENTRIX.App">
-  <uap:VisualElements DisplayName="ZENTRIX" Description="Browse and manage files and folders" BackgroundColor="#121212" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
-   <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
-  </uap:VisualElements>
-  <Extensions>
-   <uap:Extension Category="windows.fileTypeAssociation">
-    <uap:FileTypeAssociation Name="zentrixfiles">
-     <uap:DisplayName>ZENTRIX supported files</uap:DisplayName>
-     <uap:SupportedFileTypes>
-      <uap:FileType>.txt</uap:FileType>
-      <uap:FileType>.log</uap:FileType>
-      <uap:FileType>.md</uap:FileType>
-      <uap:FileType>.pdf</uap:FileType>
-      <uap:FileType>.rtf</uap:FileType>
-      <uap:FileType>.doc</uap:FileType>
-      <uap:FileType>.docx</uap:FileType>
-      <uap:FileType>.odt</uap:FileType>
-      <uap:FileType>.xls</uap:FileType>
-      <uap:FileType>.xlsx</uap:FileType>
-      <uap:FileType>.ods</uap:FileType>
-      <uap:FileType>.ppt</uap:FileType>
-      <uap:FileType>.pptx</uap:FileType>
-      <uap:FileType>.csv</uap:FileType>
-      <uap:FileType>.json</uap:FileType>
-      <uap:FileType>.xml</uap:FileType>
-      <uap:FileType>.yaml</uap:FileType>
-      <uap:FileType>.yml</uap:FileType>
-      <uap:FileType>.html</uap:FileType>
-      <uap:FileType>.htm</uap:FileType>
-      <uap:FileType>.css</uap:FileType>
-      <uap:FileType>.js</uap:FileType>
-      <uap:FileType>.ts</uap:FileType>
-      <uap:FileType>.cs</uap:FileType>
-      <uap:FileType>.cpp</uap:FileType>
-      <uap:FileType>.h</uap:FileType>
-      <uap:FileType>.hpp</uap:FileType>
-      <uap:FileType>.py</uap:FileType>
-      <uap:FileType>.java</uap:FileType>
-      <uap:FileType>.ini</uap:FileType>
-      <uap:FileType>.cfg</uap:FileType>
-      <uap:FileType>.conf</uap:FileType>
-      <uap:FileType>.zip</uap:FileType>
-      <uap:FileType>.7z</uap:FileType>
-      <uap:FileType>.rar</uap:FileType>
-      <uap:FileType>.tar</uap:FileType>
-      <uap:FileType>.gz</uap:FileType>
-      <uap:FileType>.bz2</uap:FileType>
-      <uap:FileType>.xz</uap:FileType>
-      <uap:FileType>.jpg</uap:FileType>
-      <uap:FileType>.jpeg</uap:FileType>
-      <uap:FileType>.png</uap:FileType>
-      <uap:FileType>.gif</uap:FileType>
-      <uap:FileType>.bmp</uap:FileType>
-      <uap:FileType>.webp</uap:FileType>
-      <uap:FileType>.tif</uap:FileType>
-      <uap:FileType>.tiff</uap:FileType>
-      <uap:FileType>.svg</uap:FileType>
-      <uap:FileType>.mp3</uap:FileType>
-      <uap:FileType>.wav</uap:FileType>
-      <uap:FileType>.m4a</uap:FileType>
-      <uap:FileType>.flac</uap:FileType>
-      <uap:FileType>.aac</uap:FileType>
-      <uap:FileType>.ogg</uap:FileType>
-      <uap:FileType>.mp4</uap:FileType>
-      <uap:FileType>.m4v</uap:FileType>
-      <uap:FileType>.mkv</uap:FileType>
-      <uap:FileType>.avi</uap:FileType>
-      <uap:FileType>.mov</uap:FileType>
-      <uap:FileType>.wmv</uap:FileType>
-      <uap:FileType>.webm</uap:FileType>
-      <uap:FileType>.srt</uap:FileType>
-      <uap:FileType>.ass</uap:FileType>
-      <uap:FileType>.sub</uap:FileType>
-      <uap:FileType>.iso</uap:FileType>
-      <uap:FileType>.bin</uap:FileType>
-      <uap:FileType>.cue</uap:FileType>
-      <uap:FileType>.dat</uap:FileType>
-      <uap:FileType>.pak</uap:FileType>
-      <uap:FileType>.db</uap:FileType>
-      <uap:FileType>.sqlite</uap:FileType>
-      <uap:FileType>.bak</uap:FileType>
-      <uap:FileType>.tmp</uap:FileType>
-     </uap:SupportedFileTypes>
-    </uap:FileTypeAssociation>
-   </uap:Extension>
-  </Extensions>
- </Application></Applications>
- <Capabilities><uap:Capability Name="removableStorage" /></Capabilities>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+         IgnorableNamespaces="uap">
+  <Identity Name="ZENTRIX" Publisher="CN=ZENTRIX" Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="8e8e9c2e-4a8f-4a1c-9a3d-6c7d8e9f0a1b" PhonePublisherId="00000000-0000-0000-0000-000000000000" />
+  <Properties>
+    <DisplayName>ZENTRIX</DisplayName>
+    <PublisherDisplayName>ZENTRIX</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="ZENTRIX.App">
+      <uap:VisualElements DisplayName="ZENTRIX"
+                          Description="Browse and manage files and folders"
+                          BackgroundColor="#121212"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="privateNetworkClientServer" />
+  </Capabilities>
 </Package>
