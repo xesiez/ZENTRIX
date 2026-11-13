@@ -1,0 +1,42 @@
+name: ZENTRIX Windows Companion CI
+on:
+  push:
+    branches: [feat/windows-usb-bridge]
+    paths:
+      - 'WindowsCompanion/**'
+      - '.github/workflows/companion.yml'
+  pull_request:
+    branches: [feat/windows-usb-bridge]
+    paths:
+      - 'WindowsCompanion/**'
+      - '.github/workflows/companion.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-companion:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v5
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore WindowsCompanion/ZENTRIX.Companion.csproj
+      - name: Build
+        run: dotnet build WindowsCompanion/ZENTRIX.Companion.csproj --configuration Release --no-restore
+      - name: Publish portable Windows x64 app
+        run: dotnet publish WindowsCompanion/ZENTRIX.Companion.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --output artifacts/ZENTRIX-Windows-Companion
+      - name: Package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Compress-Archive -Path 'artifacts/ZENTRIX-Windows-Companion/*' -DestinationPath 'artifacts/ZENTRIX-Windows-Companion-win-x64.zip' -CompressionLevel Optimal
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZENTRIX-Windows-Companion-win-x64
+          path: artifacts/ZENTRIX-Windows-Companion-win-x64.zip
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
