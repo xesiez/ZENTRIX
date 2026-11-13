@@ -68,7 +68,7 @@ Use opaque root IDs and relative paths. Do not expose raw drive letters as autho
 
 ## UWP manifest
 
-The Xbox client needs outbound access to a home/work LAN. Evaluate and add only the required `privateNetworkClientServer` capability, then verify it on Xbox Developer Mode. The Xbox app is a client; it does not need to listen for inbound connections. Do not add `internetClientServer` for this scenario.
+The Xbox manifest now declares `privateNetworkClientServer` and no longer declares `removableStorage` or a removable-media file-type association. This matches the approved Windows-hosted USB architecture: the Xbox app is a LAN client and does not need to listen for inbound connections. Verify the capability on the actual Xbox Developer Mode console before implementation proceeds. Do not add `internetClientServer` for this scenario.
 
 ## Implementation sequence
 
