@@ -82,6 +82,37 @@ namespace ZENTRIX
    }
   }
 
+  public async Task CreateDirectoryAsync(string rootId, string relativePath)
+  {
+   EnsurePaired();
+   var body = new JsonObject();
+   body.Add("rootId", JsonValue.CreateStringValue(rootId));
+   body.Add("path", JsonValue.CreateStringValue(relativePath ?? String.Empty));
+   var response = await _http.PostAsync(new Uri(_baseUri, "api/v1/directories"),
+    new HttpStringContent(body.Stringify(), UnicodeEncoding.Utf8, "application/json"));
+   response.EnsureSuccessStatusCode();
+  }
+
+  public async Task RenameAsync(string rootId, string relativePath, string newName)
+  {
+   EnsurePaired();
+   var body = new JsonObject();
+   body.Add("rootId", JsonValue.CreateStringValue(rootId));
+   body.Add("path", JsonValue.CreateStringValue(relativePath));
+   body.Add("newName", JsonValue.CreateStringValue(newName));
+   var response = await _http.PostAsync(new Uri(_baseUri, "api/v1/operations/rename"),
+    new HttpStringContent(body.Stringify(), UnicodeEncoding.Utf8, "application/json"));
+   response.EnsureSuccessStatusCode();
+  }
+
+  public async Task DeleteAsync(string rootId, string relativePath)
+  {
+   EnsurePaired();
+   var uri = new Uri(_baseUri, "api/v1/entries?rootId=" + Uri.EscapeDataString(rootId) + "&path=" + Uri.EscapeDataString(relativePath));
+   var response = await _http.DeleteAsync(uri);
+   response.EnsureSuccessStatusCode();
+  }
+
   private void EnsurePaired()
   {
    if (!IsPaired || _baseUri == null) throw new InvalidOperationException("Pair with the Windows Companion first.");
