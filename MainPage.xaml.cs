@@ -31,6 +31,7 @@ namespace ZENTRIX
   {
    base.OnNavigatedTo(e);
    _isPageActive = true;
+   Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
    _pageLifecycleVersion++;
    if (_currentFolder == null && !_isShowingRemovableRoot) await LoadAppStorageAsync();
    else await ReloadCurrentLocationAsync();
@@ -39,6 +40,7 @@ namespace ZENTRIX
 
   protected override void OnNavigatedFrom(NavigationEventArgs e)
   {
+   Window.Current.CoreWindow.KeyDown -= OnCoreWindowKeyDown;
    _isPageActive = false;
    _pageLifecycleVersion++;
    _explorerRequestVersion++;
@@ -169,6 +171,11 @@ namespace ZENTRIX
 
   private async void OnBackClick(object sender, RoutedEventArgs e)
   {
+   await GoBackAsync();
+  }
+
+  private async Task GoBackAsync()
+  {
    if (_history.Count > 0)
    {
     ExplorerLocation previous = _history.Pop();
@@ -176,7 +183,38 @@ namespace ZENTRIX
     else if (previous.Folder != null) await LoadFolderAsync(previous.Folder, false);
     else await LoadAppStorageAsync();
    }
-   else if (_isShowingRemovableRoot || _currentFolder != null) await LoadAppStorageAsync();
+   else if (_isShowingRemovableRoot || _currentFolder != null)
+   {
+    await LoadAppStorageAsync();
+   }
+  }
+
+  private void OnOptionsClick(object sender, RoutedEventArgs e)
+  {
+   ShowOptionsFlyout(OptionsButton);
+  }
+
+  private void ShowOptionsFlyout(FrameworkElement target)
+  {
+   MenuFlyout flyout = new MenuFlyout();
+   MenuFlyoutItem refreshItem = new MenuFlyoutItem { Text = "Refresh" };
+   refreshItem.Click += async (s, e) => await ReloadCurrentLocationAsync();
+   flyout.Items.Add(refreshItem);
+   flyout.ShowAt(target ?? OptionsButton);
+  }
+
+  private async void OnCoreWindowKeyDown(CoreWindow sender, KeyEventArgs args)
+  {
+   if (args.VirtualKey == VirtualKey.GamepadB)
+   {
+    args.Handled = true;
+    await GoBackAsync();
+   }
+   else if (args.VirtualKey == VirtualKey.GamepadX)
+   {
+    args.Handled = true;
+    ShowOptionsFlyout(OptionsButton);
+   }
   }
 
   private async void OnFileItemClick(object sender, ItemClickEventArgs e)
