@@ -107,6 +107,7 @@ internal sealed class CompanionForm : Form
             var builder = WebApplication.CreateBuilder();
             builder.WebHost.ConfigureKestrel(options =>
             {
+                options.Limits.MaxRequestBodySize = null; // Stream large files without Kestrel's default 30 MiB request cap.
                 options.ListenAnyIP(47830); // Public certificate bootstrap only; all other HTTP paths are blocked below.
                 options.ListenAnyIP(47831, listen => listen.UseHttps(cert));
             });
