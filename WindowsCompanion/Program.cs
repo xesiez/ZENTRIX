@@ -160,8 +160,8 @@ internal sealed class CompanionForm : Form
                 catch (IOException) { return Results.Problem("Upload failed; check free space and volume state", statusCode: 409); }
                 finally { if (File.Exists(temp)) File.Delete(temp); }
             });
-            app.MapPost("/api/v1/operations/copy", (TransferRequest request, RootStore roots) => Transfer(request, roots, false));
-            app.MapPost("/api/v1/operations/move", (TransferRequest request, RootStore roots) => Transfer(request, roots, true));
+            app.MapPost("/api/v1/operations/copy", (TransferRequest request, RootStore roots) => CompanionOperations.Transfer(request, roots, false));
+            app.MapPost("/api/v1/operations/move", (TransferRequest request, RootStore roots) => CompanionOperations.Transfer(request, roots, true));
             app.MapPost("/api/v1/operations/rename", (RenameRequest request, RootStore roots) =>
             {
                 if (string.IsNullOrWhiteSpace(request.NewName) || request.NewName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 || request.NewName is "." or "..")
@@ -239,7 +239,7 @@ internal sealed class AuthState(string pairingCode)
         CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(_token), Encoding.UTF8.GetBytes(header[7..]));
 }
 
-internal static IResult Transfer(TransferRequest request, RootStore roots, bool move)
+internal static class CompanionOperations\n{\npublic static IResult Transfer(TransferRequest request, RootStore roots, bool move)
 {
     if (!roots.TryResolve(request.SourceRootId, request.SourcePath, out var source) ||
         !roots.TryResolve(request.DestinationRootId, request.DestinationPath, out var destination))
