@@ -1,0 +1,53 @@
+<Page x:Class="ZENTRIX.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Background="{StaticResource ColorBackgroundBrush}" NavigationCacheMode="Enabled">
+ <Grid x:Name="ContentRoot" Background="{StaticResource ColorBackgroundBrush}" GotFocus="OnContentRootGotFocus">
+  <SplitView IsPaneOpen="True" DisplayMode="Inline" OpenPaneLength="224" CompactPaneLength="72">
+   <SplitView.Pane><Grid Background="{StaticResource SidebarBrush}"><StackPanel Padding="16,24,16,16">
+    <TextBlock Text="ZENTRIX" Style="{StaticResource PageTitleTextStyle}" Margin="4,0,0,28" />
+    <Button x:Name="FilesNavButton" Content="Files" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnFilesNavClick" Margin="0,0,0,8" />
+    <Button Content="Home" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnHomeNavClick" Margin="0,0,0,8" />
+    <Button Content="Music" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnMusicNavClick" Margin="0,0,0,8" />
+    <Button Content="Phone Link" Style="{StaticResource ConsoleButtonStyle}" HorizontalContentAlignment="Left" Click="OnPhoneLinkNavClick" />
+    <TextBlock Text="XBOX SERIES X" Style="{StaticResource MetadataTextStyle}" Foreground="{StaticResource ColorTextMutedBrush}" Margin="4,28,0,0" />
+   </StackPanel></Grid></SplitView.Pane>
+   <SplitView.Content><Grid Padding="32,24,32,16">
+    <Grid.RowDefinitions><RowDefinition Height="76" /><RowDefinition Height="*" /><RowDefinition Height="56" /></Grid.RowDefinitions>
+    <StackPanel Grid.Row="0" VerticalAlignment="Center">
+     <TextBlock x:Name="SectionTitle" Text="Files" Style="{StaticResource PageTitleTextStyle}" />
+     <TextBlock x:Name="SectionSubtitle" Text="Browse app storage and removable devices" Style="{StaticResource MetadataTextStyle}" Foreground="{StaticResource ColorTextSecondaryBrush}" />
+    </StackPanel>
+    <Grid Grid.Row="1">
+     <Grid x:Name="FilesWorkspace">
+      <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+      <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+       <Button Content="App storage" Style="{StaticResource ConsoleButtonStyle}" Click="OnAppStorageClick" Margin="0,0,12,0" />
+       <Button Content="USB devices" Style="{StaticResource ConsoleButtonStyle}" Click="OnUsbClick" Margin="0,0,12,0" />
+       <Button Content="Back" Style="{StaticResource ConsoleButtonStyle}" Click="OnBackClick" />
+      </StackPanel>
+      <ListView x:Name="FilesListView" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnFileItemClick" SelectionMode="None" Background="Transparent" ItemContainerStyle="{StaticResource ConsoleListViewItemStyle}">
+       <ListView.ItemTemplate><DataTemplate><Grid Padding="12,8">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource ColorAccentBrightBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" />
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+         <TextBlock Text="{Binding Name}" Style="{StaticResource FileRowTitleTextStyle}" />
+         <TextBlock Text="{Binding Details}" Style="{StaticResource MetadataTextStyle}" Foreground="{StaticResource ColorTextSecondaryBrush}" />
+        </StackPanel>
+       </Grid></DataTemplate></ListView.ItemTemplate>
+      </ListView>
+      <TextBlock x:Name="StatusText" Grid.Row="2" Text="Loading app storage..." Style="{StaticResource MetadataTextStyle}" Foreground="{StaticResource ColorTextSecondaryBrush}" Margin="4,12,4,0" />
+     </Grid>
+     <StackPanel x:Name="PlaceholderPanel" Visibility="Collapsed" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="640">
+      <TextBlock x:Name="PlaceholderTitle" Text="Coming soon" Style="{StaticResource SectionHeadingTextStyle}" HorizontalAlignment="Center" />
+      <TextBlock x:Name="PlaceholderText" Text="This section is part of the ZENTRIX navigation shell." Style="{StaticResource BodyTextStyle}" Foreground="{StaticResource ColorTextSecondaryBrush}" TextAlignment="Center" TextWrapping="Wrap" Margin="0,12,0,0" />
+     </StackPanel>
+    </Grid>
+    <Border Grid.Row="2" Style="{StaticResource ControllerHintBarStyle}" VerticalAlignment="Bottom">
+     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+      <TextBlock Text="A  Open / Select" Style="{StaticResource ControllerHintTextStyle}" Margin="12,0" />
+      <TextBlock Text="B  Back / Close" Style="{StaticResource ControllerHintTextStyle}" Margin="12,0" />
+      <TextBlock Text="X  Options" Style="{StaticResource ControllerHintTextStyle}" Margin="12,0" />
+     </StackPanel>
+    </Border>
+   </Grid></SplitView.Content>
+  </SplitView>
+ </Grid>
+</Page>
