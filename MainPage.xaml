@@ -20,7 +20,7 @@
        <Button Content="Back" Style="{StaticResource ConsoleButtonStyle}" Click="OnBackClick" Margin="0,0,12,0" />
        <Button x:Name="OptionsButton" Content="Options" Style="{StaticResource ConsoleButtonStyle}" Click="OnOptionsClick" />
       </StackPanel>
-      <ListView x:Name="FilesListView" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnFileItemClick" SelectionMode="None" Background="Transparent" ItemContainerStyle="{StaticResource ConsoleListViewItemStyle}">
+      <ListView x:Name="FilesListView" Grid.Row="1" IsItemClickEnabled="True" ItemClick="OnFileItemClick" SelectionMode="Single" Background="Transparent" ItemContainerStyle="{StaticResource ConsoleListViewItemStyle}">
        <ListView.ItemTemplate><DataTemplate><Grid Margin="12,8">
         <Grid.ColumnDefinitions><ColumnDefinition Width="48" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
         <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="24" Foreground="{StaticResource ColorAccentBrightBrush}" VerticalAlignment="Center" HorizontalAlignment="Center" />
