@@ -1,7 +1,7 @@
 name: ZENTRIX CI
 on:
   push:
-    branches: [main, prep/storage-file-architecture]
+    branches: [main, prep/storage-file-architecture, feat/windows-usb-bridge]
   pull_request:
     branches: [main, prep/storage-file-architecture]
   workflow_dispatch:
