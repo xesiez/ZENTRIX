@@ -325,7 +325,68 @@ namespace ZENTRIX
    MenuFlyoutItem refreshItem = new MenuFlyoutItem { Text = "Refresh" };
    refreshItem.Click += async (s, e) => await ReloadCurrentLocationAsync();
    flyout.Items.Add(refreshItem);
+   if (_isRemoteLocation && _bridgeClient != null && !String.IsNullOrEmpty(_remoteRootId))
+   {
+    MenuFlyoutItem createFolder = new MenuFlyoutItem { Text = "Create folder" };
+    createFolder.Click += async (s, e) => await CreateRemoteFolderAsync();
+    flyout.Items.Add(createFolder);
+    FileEntry selected = FilesListView.SelectedItem as FileEntry;
+    if (selected != null && !String.IsNullOrEmpty(selected.RemoteRootId) && !String.IsNullOrEmpty(selected.RemotePath))
+    {
+     MenuFlyoutItem rename = new MenuFlyoutItem { Text = "Rename selected" };
+     rename.Click += async (s, e) => await RenameSelectedRemoteAsync(selected);
+     flyout.Items.Add(rename);
+     MenuFlyoutItem delete = new MenuFlyoutItem { Text = "Delete selected" };
+     delete.Click += async (s, e) => await DeleteSelectedRemoteAsync(selected);
+     flyout.Items.Add(delete);
+    }
+   }
    flyout.ShowAt(target ?? OptionsButton);
+  }
+
+  private async Task<string> PromptForTextAsync(string title, string placeholder)
+  {
+   TextBox box = new TextBox { PlaceholderText = placeholder, MinWidth = 360 };
+   ContentDialog dialog = new ContentDialog { Title = title, Content = box, PrimaryButtonText = "Confirm", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
+   if (await dialog.ShowAsync() != ContentDialogResult.Primary) return null;
+   return box.Text;
+  }
+
+  private async Task CreateRemoteFolderAsync()
+  {
+   string name = await PromptForTextAsync("Create folder", "Folder name");
+   if (String.IsNullOrWhiteSpace(name)) return;
+   string path = String.IsNullOrEmpty(_remoteCurrentPath) ? name : _remoteCurrentPath + "/" + name;
+   try
+   {
+    await _bridgeClient.CreateDirectoryAsync(_remoteRootId, path);
+    await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
+   }
+   catch (Exception ex) { StatusText.Text = "Create folder failed: " + ex.Message; }
+  }
+
+  private async Task RenameSelectedRemoteAsync(FileEntry entry)
+  {
+   string name = await PromptForTextAsync("Rename", "New name");
+   if (String.IsNullOrWhiteSpace(name)) return;
+   try
+   {
+    await _bridgeClient.RenameAsync(entry.RemoteRootId, entry.RemotePath, name);
+    await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
+   }
+   catch (Exception ex) { StatusText.Text = "Rename failed: " + ex.Message; }
+  }
+
+  private async Task DeleteSelectedRemoteAsync(FileEntry entry)
+  {
+   ContentDialog confirm = new ContentDialog { Title = "Delete permanently?", Content = "Delete " + entry.Name + " from the Windows shared folder?", PrimaryButtonText = "Delete", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Close };
+   if (await confirm.ShowAsync() != ContentDialogResult.Primary) return;
+   try
+   {
+    await _bridgeClient.DeleteAsync(entry.RemoteRootId, entry.RemotePath);
+    await LoadRemoteEntriesAsync(_remoteRootId, _remoteCurrentPath);
+   }
+   catch (Exception ex) { StatusText.Text = "Delete failed: " + ex.Message; }
   }
 
   private async void OnCoreWindowKeyDown(CoreWindow sender, KeyEventArgs args)
