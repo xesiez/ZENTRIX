@@ -1,0 +1,35 @@
+name: ZENTRIX CI
+on:
+  push:
+    branches: [main, prep/storage-file-architecture]
+  pull_request:
+    branches: [main, prep/storage-file-architecture]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: Build UWP x64
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Locate Visual Studio MSBuild
+        shell: pwsh
+        run: |
+          $vswhere = Join-Path "$env:ProgramFiles(x86)" 'Microsoft Visual Studio\Installer\vswhere.exe'
+          if (-not (Test-Path $vswhere)) { throw "vswhere.exe was not found." }
+          $msbuild = & $vswhere -latest -products '*' -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
+          if (-not $msbuild) { throw "MSBuild was not found." }
+          "MSBUILD_PATH=$msbuild" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Restore NuGet packages
+        shell: pwsh
+        run: |
+          $nuget = Get-Command nuget.exe -ErrorAction SilentlyContinue
+          if (-not $nuget) { throw "NuGet CLI was not found on PATH." }
+          nuget restore .\ZENTRIX.sln -NonInteractive
+      - name: Build Release x64
+        shell: pwsh
+        run: |
+          & $env:MSBUILD_PATH .\ZENTRIX.sln /m /t:Build /p:Configuration=Release /p:Platform=x64 /p:AppxPackage=false /p:GenerateAppxPackageOnBuild=false /verbosity:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
