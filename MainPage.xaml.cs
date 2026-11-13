@@ -217,16 +217,16 @@ namespace ZENTRIX
   {
    if (_bridgeClient != null && _bridgeClient.IsPaired) { await LoadRemoteRootsAsync(); return; }
    TextBox hostBox = new TextBox { PlaceholderText = "Windows PC IP address (example: 192.168.1.10)", MinWidth = 420 };
-   TextBox codeBox = new TextBox { PlaceholderText = "One-time pairing code", MinWidth = 420 };
+   TextBox codeBox = new TextBox { PlaceholderText = "One-time pairing code", MinWidth = 420 };\n   TextBox fingerprintBox = new TextBox { PlaceholderText = "SHA-256 certificate fingerprint from Windows Companion", MinWidth = 420 };
    StackPanel panel = new StackPanel();
    panel.Children.Add(new TextBlock { Text = "Enter the address shown by ZENTRIX Windows Companion, then its temporary pairing code." });
-   panel.Children.Add(hostBox); panel.Children.Add(codeBox);
+   panel.Children.Add(hostBox); panel.Children.Add(codeBox); panel.Children.Add(fingerprintBox);
    ContentDialog dialog = new ContentDialog { Title = "Connect to Windows PC", Content = panel, PrimaryButtonText = "Pair securely", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary };
    if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
    try
    {
     WindowsBridgeClient client = new WindowsBridgeClient();
-    await client.PairAsync(hostBox.Text, codeBox.Text);
+    await client.PairAsync(hostBox.Text, codeBox.Text, fingerprintBox.Text);
     _bridgeClient = client;
     await LoadRemoteRootsAsync();
    }
