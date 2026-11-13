@@ -34,8 +34,13 @@ namespace ZENTRIX
    _isPageActive = true;
    Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
    _pageLifecycleVersion++;
-   if (_currentFolder == null && !_isShowingRemovableRoot) await LoadAppStorageAsync();
-   else await ReloadCurrentLocationAsync();
+   StorageFile activatedFile = e.Parameter as StorageFile;
+   if (activatedFile != null)
+    await LoadActivatedFileLocationAsync(activatedFile);
+   else if (_currentFolder == null && !_isShowingRemovableRoot)
+    await LoadAppStorageAsync();
+   else
+    await ReloadCurrentLocationAsync();
    if (_lastFocusedControl == null && FilesListView != null) FilesListView.Focus(FocusState.Programmatic);
   }
 
@@ -61,6 +66,27 @@ namespace ZENTRIX
     else if (_isPageActive && FilesListView != null)
      FilesListView.Focus(FocusState.Programmatic);
    });
+  }
+
+  private async Task LoadActivatedFileLocationAsync(StorageFile file)
+  {
+   try
+   {
+    StorageFolder parent = await file.GetParentAsync();
+    if (parent != null)
+    {
+     await LoadFolderAsync(parent, false);
+     if (_isPageActive) StatusText.Text = "File location opened: " + file.Name;
+     return;
+    }
+   }
+   catch (UnauthorizedAccessException ex) { Debug.WriteLine("ZENTRIX file activation access denied: " + ex); }
+   catch (IOException ex) { Debug.WriteLine("ZENTRIX file activation I/O failure: " + ex); }
+   catch (COMException ex) { Debug.WriteLine("ZENTRIX file activation COM failure: " + ex); }
+   catch (Exception ex) { Debug.WriteLine("ZENTRIX file activation failed: " + ex); }
+
+   await LoadAppStorageAsync();
+   if (_isPageActive) StatusText.Text = "The selected file location is unavailable. App-local storage is available.";
   }
 
   private async Task ReloadCurrentLocationAsync()
